@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>D&D Map Maker</title>
+<script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
+<style>
+  body { margin:0; font-family:sans-serif; background:#2b2b2b; color:white; display:flex; }
+  #sidebar, #objectList {
+    width:200px; background:#333; padding:10px; overflow-y:auto;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  #container { flex:1; background:#444; height:100vh; }
+  .asset { cursor:pointer; border:1px solid #555; padding:4px; background:#555; }
+  .asset:hover { background:#777; }
+  .objItem { cursor:pointer; padding:4px; background:#555; border:1px solid #666; }
+  .objItem.active { background:#999; }
+  img.thumb { width:100%; height:auto; display:block; }
+  select, input[type=file], button {
+    background:#555; color:white; border:none; padding:6px; cursor:pointer; width:100%;
+  }
+  button:hover, select:hover { background:#777; }
+</style>
+</head>
+<body>
+
+<!-- Левая панель ассетов -->
+<div id="sidebar">
+  <h3>Ассеты</h3>
+  <div id="assetList"></div>
+  <input type="file" id="fileInput" accept="image/*">
+  <button id="saveBtn">Сохранить карту</button>
+</div>
+
+<!-- Центральное поле -->
+<div id="container"></div>
+
+<!-- Правая панель объектов -->
+<div id="objectList">
+  <h3>Объекты</h3>
+  <div id="objects"></div>
+  <button id="deleteBtn">Удалить выбранный</button>
+  <h3>Фон</h3>
+  <select id="bgSelect">
+    <option value="grid">Сетка по умолчанию</option>
+    <option value="parchment">Пергамент</option>
+    <option value="stone">Тёмный камень</option>
+    <option value="sand">Песок</option>
+  </select>
+  <input type="file" id="bgFile" accept="image/*">
+</div>
+
+<script>
+// ---------- Ассеты ----------
+const assets = [
+  {name:'Деревянный дом', url:'assets/wood_house.png'},
+  {name:'Каменный дом',   url:'assets/stone_house.png'},
+  {name:'Замок',          url:'assets/castle.png'},
+  {name:'Таверна',        url:'assets/tavern.png'},
+  {name:'Гильдия',        url:'assets/guild.png'},
+  {name:'Лес',            url:'assets/forest.png'},
+  {name:'Поляна',         url:'assets/clearing.png'},
+  // --- Подземелье ---
+  {name:'Вход в подземелье', url:'assets/dungeon_entrance.png'},
+  {name:'Комната подземелья', url:'assets/dungeon_room.png'},
+  {name:'Сундук',          url:'assets/dungeon_chest.png'},
+  {name:'Факел',           url:'assets/dungeon_torch.png'},
+  {name:'Камни/руины',     url:'assets/dungeon_rocks.png'}
+];
+
+// ---------- Сцена ----------
+const width = window.innerWidth - 400;
+const height = window.innerHeight;
+const stage = new Konva.Stage({ container: 'container', width, height });
+
+// Слой фона, сетки и объектов
+const backgroundLayer = new Konva.Layer();
+const gridLayer = new Konva.Layer();
+const objectLayer = new Konva.Layer();
+stage.add(backgroundLayer);
+stage.add(gridLayer);
+stage.add(objectLayer);
+
+// --- начальный фон (сетка) ---
+function drawGrid() {
+  gridLayer.destroyChildren();
+  const cellSize = 50;
+  for (let i = 0; i < width/cellSize; i++) {
+    gridLayer.add(new Konva.Line({
+      points: [i*cellSize, 0, i*cellSize, height],
+      stroke: '#666', strokeWidth: 1
+    }));
+  }
+  for (let j = 0; j < height/cellSize; j++) {
+    gridLayer.add(new Konva.Line({
+      points: [0, j*cellSize, width, j*cellSize],
+      stroke: '#666', strokeWidth: 1
+    }));
+  }
+  gridLayer.draw();
+}
+drawGrid();
+
+// --- панель ассетов ---
+const assetList = document.getElementById('assetList');
+assets.forEach(a => {
+  const div = document.createElement('div');
+  div.className = 'asset';
+  div.innerHTML = `<strong>${a.name}</strong><img class="thumb" src="${a.url}">`;
+  div.addEventListener('click', () => addAssetToMap(a.url, a.name));
+  assetList.appendChild(div);
+});
+
+// ---------- Управление объектами ----------
+let objectsData = []; // {id, name, node}
+let selectedId = null;
+
+const transformer = new Konva.Transformer({
+  rotateEnabled: false,
+  enabledAnchors: ['top-left','top-right','bottom-left','bottom-right'],
+  boundBoxFunc: (oldBox, newBox) => newBox.width<20||newBox.height<20?oldBox:newBox
+});
+objectLayer.add(transformer);
+
+function addAssetToMap(url, name) {
+  Konva.Image.fromURL(url, img => {
+    img.setAttrs({
+      x: width/2 - 32,
+      y: height/2 - 32,
+      width: 64,
+      height: 64,
+      draggable: true,
+      id: 'obj_'+Date.now()
+    });
+    img.on('click', () => selectObject(img.id()));
+    objectLayer.add(img);
+    objectLayer.draw();
+    objectsData.push({id: img.id(), name, node: img});
+    refreshObjectList();
+  });
+}
+
+const objectsDiv = document.getElementById('objects');
+function refreshObjectList() {
+  objectsDiv.innerHTML = '';
+  objectsData.forEach(obj => {
+    const div = document.createElement('div');
+    div.className = 'objItem' + (obj.id === selectedId ? ' active' : '');
+    div.textContent = obj.name;
+    div.addEventListener('click', () => selectObject(obj.id));
+    objectsDiv.appendChild(div);
+  });
+}
+
+function selectObject(id) {
+  selectedId = id;
+  refreshObjectList();
+  const target = objectsData.find(o => o.id === id);
+  transformer.nodes(target ? [target.node] : []);
+}
+
+document.getElementById('deleteBtn').addEventListener('click', () => {
+  if (!selectedId) return;
+  const idx = objectsData.findIndex(o => o.id === selectedId);
+  if (idx >= 0) {
+    objectsData[idx].node.destroy();
+    objectsData.splice(idx, 1);
+    selectedId = null;
+    transformer.nodes([]);
+    objectLayer.draw();
+    refreshObjectList();
+  }
+});
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => addAssetToMap(evt.target.result, file.name);
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const uri = stage.toDataURL({ pixelRatio: 2 });
+  const link = document.createElement('a');
+  link.download = 'dnd_map.png';
+  link.href = uri;
+  link.click();
+});
+
+// ---------- Масштабирование сцены или объекта ----------
+stage.on('wheel', e => {
+  e.evt.preventDefault();
+  const pointer = stage.getPointerPosition();
+  if (selectedId) {
+    const target = objectsData.find(o => o.id === selectedId);
+    if (target) {
+      const box = target.node.getClientRect();
+      if (pointer.x >= box.x && pointer.x <= box.x + box.width &&
+          pointer.y >= box.y && pointer.y <= box.y + box.height) {
+        const scaleBy = 1.1;
+        const dir = e.evt.deltaY > 0 ? -1 : 1;
+        const oldScale = target.node.scaleX();
+        const newScale = dir > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+        target.node.scale({x:newScale, y:newScale});
+        objectLayer.batchDraw();
+        return;
+      }
+    }
+  }
+  // масштаб всей сцены
+  const scaleBy = 1.1;
+  const oldScale = stage.scaleX();
+  const mousePointTo = {
+    x: (pointer.x - stage.x()) / oldScale,
+    y: (pointer.y - stage.y()) / oldScale
+  };
+  const direction = e.evt.deltaY > 0 ? -1 : 1;
+  const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+  stage.scale({x:newScale, y:newScale});
+  const newPos = {
+    x: pointer.x - mousePointTo.x * newScale,
+    y: pointer.y - mousePointTo.y * newScale
+  };
+  stage.position(newPos);
+  stage.batchDraw();
+});
+
+// ---------- Смена фона ----------
+const bgSelect = document.getElementById('bgSelect');
+const bgFile = document.getElementById('bgFile');
+let bgImageNode = null;
+
+function setBackground(typeOrUrl) {
+  backgroundLayer.destroyChildren();
+  if (typeOrUrl === 'grid') {
+    drawGrid();
+    return;
+  }
+  let url = '';
+  if (typeOrUrl === 'parchment') url = 'https://i.ibb.co/7vjsPj4/parchment.jpg';
+  if (typeOrUrl === 'stone')     url = 'https://i.ibb.co/m9HgKpP/stone.jpg';
+  if (typeOrUrl === 'sand')      url = 'https://i.ibb.co/xMgtcJ8/sand.jpg';
+  if (typeOrUrl.startsWith('data:')) url = typeOrUrl; // custom upload
+  if (!url) return;
+
+  Konva.Image.fromURL(url, img => {
+    img.setAttrs({x:0, y:0, width:stage.width(), height:stage.height()});
+    backgroundLayer.add(img);
+    backgroundLayer.moveToBottom();
+    backgroundLayer.draw();
+  });
+}
+
+bgSelect.addEventListener('change', e => {
+  setBackground(e.target.value);
+});
+
+bgFile.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => setBackground(evt.target.result);
+  reader.readAsDataURL(file);
+});
+
+</script>
+</body>
+</html>
