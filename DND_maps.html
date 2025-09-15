@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.6.3</title>
+<title>D&D Map Maker — 0.6.5</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
   :root { --left:200px; --right:220px; }
@@ -144,7 +144,7 @@ const transformer = new Konva.Transformer({
 });
 objectLayer.add(transformer);
 
-function addAsset(url,name,x=null,y=null){
+function addAsset(url,name,x=null,y=null,extra={}) {
   Konva.Image.fromURL(url,img=>{
     const w=img.width()||64, h=img.height()||64;
     const id='obj_'+Date.now()+'_'+(idCounter++);
@@ -154,7 +154,8 @@ function addAsset(url,name,x=null,y=null){
       width: w/2,
       height: h/2,
       draggable: true,
-      id
+      id,
+      ...extra // <-- сюда передаем scale/rotation при копировании
     });
     img.on('click',e=>{ e.cancelBubble=true; toggleSelect(id); });
     img.on('dragend transformend',refreshObjectList);
@@ -194,13 +195,20 @@ document.getElementById('deleteBtn').onclick=()=>{
   if(i>=0){ objectsData[i].node.destroy(); objectsData.splice(i,1); deselect(); refreshObjectList(); }
 };
 
-/* Копирование */
+/* --- Копирование с сохранением масштаба и поворота --- */
 document.getElementById('copyBtn').onclick=()=>{
   if(!selectedId) return;
   const obj=objectsData.find(o=>o.id===selectedId);
   if(!obj) return;
-  const pos=stage.getPointerPosition() || {x:stage.width()/2,y:stage.height()/2};
-  addAsset(obj.url, obj.name+' (копия)', pos.x, pos.y);
+  const n=obj.node;
+  const pos=stage.getPointerPosition() || {x:n.x()+20,y:n.y()+20};
+  addAsset(obj.url, obj.name+' (копия)', pos.x, pos.y, {
+    width: n.width(),
+    height: n.height(),
+    scaleX: n.scaleX(),
+    scaleY: n.scaleY(),
+    rotation: n.rotation()
+  });
 };
 
 /* Зеркалирование */
@@ -208,7 +216,7 @@ document.getElementById('mirrorBtn').onclick=()=>{
   if(!selectedId) return;
   const obj=objectsData.find(o=>o.id===selectedId);
   if(!obj) return;
-  obj.node.scaleX(obj.node.scaleX()*-1); // отражение по X
+  obj.node.scaleX(obj.node.scaleX()*-1);
   objectLayer.batchDraw();
 };
 
