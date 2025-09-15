@@ -1,57 +1,64 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>D&D Map Maker</title>
+<meta charset="utf-8" />
+<title>D&D Map Maker — исправлено</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
-  body { margin:0; font-family:sans-serif; background:#2b2b2b; color:white; display:flex; }
-  #sidebar, #objectList {
-    width:200px; background:#333; padding:10px; overflow-y:auto;
-    display:flex; flex-direction:column; gap:10px;
-  }
-  #container { flex:1; background:#444; height:100vh; }
-  .asset { cursor:pointer; border:1px solid #555; padding:4px; background:#555; }
-  .asset:hover { background:#777; }
-  .objItem { cursor:pointer; padding:4px; background:#555; border:1px solid #666; }
-  .objItem.active { background:#999; }
-  img.thumb { width:100%; height:auto; display:block; }
-  select, input[type=file], button {
-    background:#555; color:white; border:none; padding:6px; cursor:pointer; width:100%;
-  }
-  button:hover, select:hover { background:#777; }
+  :root { --left-w:200px; --right-w:200px; }
+  html,body { height:100%; margin:0; font-family:Arial, sans-serif; background:#222; color:#eee; }
+  .layout { display:flex; height:100vh; }
+  .panel { box-sizing:border-box; padding:12px; background:#333; overflow:auto; }
+  .left { width:var(--left-w); }
+  .right { width:var(--right-w); }
+  #container { flex:1; background:#444; }
+  h3 { margin:6px 0; font-size:15px; }
+  .asset { display:block; padding:6px; margin-bottom:8px; background:#4b4b4b; border-radius:6px; cursor:pointer; border:1px solid #555; }
+  .asset:hover { background:#5f5f5f; }
+  .thumb { width:100%; height:auto; margin-top:6px; border-radius:4px; }
+  .objItem { padding:6px; margin-bottom:6px; background:#4b4b4b; border-radius:6px; cursor:pointer; border:1px solid #555; }
+  .objItem.active { background:#c8b56a; color:#000; }
+  button, select, input[type=file] { width:100%; padding:8px; margin-top:8px; border:0; background:#5a5a5a; color:#fff; border-radius:6px; cursor:pointer; }
+  button:hover, select:hover, input[type=file]:hover { background:#777; }
+  .small { font-size:12px; color:#cfcfcf; margin-top:8px; }
+  .info { font-size:12px; color:#ddd; margin-top:6px; }
 </style>
 </head>
 <body>
+<div class="layout">
+  <div class="panel left">
+    <h3>Ассеты (кликаете — добавляется)</h3>
+    <div id="assetList"></div>
+    <input id="fileInput" type="file" accept="image/*">
+    <button id="saveBtn">Сохранить карту (PNG)</button>
+    <div class="small">Положите свои PNG в папку <code>assets/</code> (имена в коде ниже) или загружайте через «Выбрать файл».</div>
+  </div>
 
-<!-- Левая панель ассетов -->
-<div id="sidebar">
-  <h3>Ассеты</h3>
-  <div id="assetList"></div>
-  <input type="file" id="fileInput" accept="image/*">
-  <button id="saveBtn">Сохранить карту</button>
-</div>
+  <div id="container"></div>
 
-<!-- Центральное поле -->
-<div id="container"></div>
+  <div class="panel right">
+    <h3>Объекты на карте</h3>
+    <div id="objects"></div>
+    <button id="deleteBtn">Удалить выбранный</button>
 
-<!-- Правая панель объектов -->
-<div id="objectList">
-  <h3>Объекты</h3>
-  <div id="objects"></div>
-  <button id="deleteBtn">Удалить выбранный</button>
-  <h3>Фон</h3>
-  <select id="bgSelect">
-    <option value="grid">Сетка по умолчанию</option>
-    <option value="parchment">Пергамент</option>
-    <option value="stone">Тёмный камень</option>
-    <option value="sand">Песок</option>
-  </select>
-  <input type="file" id="bgFile" accept="image/*">
+    <h3 style="margin-top:14px">Фон</h3>
+    <select id="bgSelect">
+      <option value="grid">Сетка (по умолчанию)</option>
+      <option value="parchment">Пергамент</option>
+      <option value="stone">Тёмный камень</option>
+      <option value="sand">Песок</option>
+    </select>
+    <input id="bgFile" type="file" accept="image/*">
+    <div class="info">Клик по пустому месту — снять выделение. Клик по выделенному — отменить выделение.</div>
+  </div>
 </div>
 
 <script>
-// ---------- Ассеты ----------
+/* ==========================
+   Настройка ассетов (локальные файлы)
+   Положите свои файлы в папку assets/ рядом с index.html.
+   Имена можно менять — но тогда поменяйте их и здесь.
+   ========================== */
 const assets = [
   {name:'Деревянный дом', url:'assets/wood_house.png'},
   {name:'Каменный дом',   url:'assets/stone_house.png'},
@@ -60,7 +67,7 @@ const assets = [
   {name:'Гильдия',        url:'assets/guild.png'},
   {name:'Лес',            url:'assets/forest.png'},
   {name:'Поляна',         url:'assets/clearing.png'},
-  // --- Подземелье ---
+  // Подземелье
   {name:'Вход в подземелье', url:'assets/dungeon_entrance.png'},
   {name:'Комната подземелья', url:'assets/dungeon_room.png'},
   {name:'Сундук',          url:'assets/dungeon_chest.png'},
@@ -68,202 +75,368 @@ const assets = [
   {name:'Камни/руины',     url:'assets/dungeon_rocks.png'}
 ];
 
-// ---------- Сцена ----------
-const width = window.innerWidth - 400;
-const height = window.innerHeight;
-const stage = new Konva.Stage({ container: 'container', width, height });
+/* ==========================
+   Stage и слои
+   ========================== */
+const leftW = 200, rightW = 200;
+let stageWidth = Math.max(200, window.innerWidth - (leftW + rightW));
+let stageHeight = window.innerHeight;
 
-// Слой фона, сетки и объектов
-const backgroundLayer = new Konva.Layer();
-const gridLayer = new Konva.Layer();
-const objectLayer = new Konva.Layer();
-stage.add(backgroundLayer);
+const stage = new Konva.Stage({
+  container: 'container',
+  width: stageWidth,
+  height: stageHeight
+});
+const bgLayer = new Konva.Layer();       // фон (картинка)
+const gridLayer = new Konva.Layer();     // сетка
+const objectLayer = new Konva.Layer();   // объекты
+stage.add(bgLayer);
 stage.add(gridLayer);
 stage.add(objectLayer);
 
-// --- начальный фон (сетка) ---
-function drawGrid() {
+/* --- Рисуем сетку (на gridLayer) --- */
+const defaultCell = 48;
+function drawGrid(cellSize = defaultCell) {
   gridLayer.destroyChildren();
-  const cellSize = 50;
-  for (let i = 0; i < width/cellSize; i++) {
-    gridLayer.add(new Konva.Line({
-      points: [i*cellSize, 0, i*cellSize, height],
-      stroke: '#666', strokeWidth: 1
-    }));
+  const w = stage.width(), h = stage.height();
+  for (let i = 0; i <= w / cellSize; i++) {
+    gridLayer.add(new Konva.Line({ points:[i*cellSize,0, i*cellSize,h], stroke:'#666', strokeWidth:1 }));
   }
-  for (let j = 0; j < height/cellSize; j++) {
-    gridLayer.add(new Konva.Line({
-      points: [0, j*cellSize, width, j*cellSize],
-      stroke: '#666', strokeWidth: 1
-    }));
+  for (let j = 0; j <= h / cellSize; j++) {
+    gridLayer.add(new Konva.Line({ points:[0,j*cellSize, w,j*cellSize], stroke:'#666', strokeWidth:1 }));
   }
-  gridLayer.draw();
+  gridLayer.batchDraw();
 }
 drawGrid();
 
-// --- панель ассетов ---
+/* ==========================
+   Панель ассетов (левая)
+   ========================== */
 const assetList = document.getElementById('assetList');
 assets.forEach(a => {
   const div = document.createElement('div');
   div.className = 'asset';
-  div.innerHTML = `<strong>${a.name}</strong><img class="thumb" src="${a.url}">`;
-  div.addEventListener('click', () => addAssetToMap(a.url, a.name));
+  div.innerHTML = `<strong>${a.name}</strong><img class="thumb" src="${a.url}" alt="${a.name}" onerror="this.style.opacity=0.5">`;
+  div.addEventListener('click', () => addAssetToMap(a.url, a.name, true));
   assetList.appendChild(div);
 });
 
-// ---------- Управление объектами ----------
+/* ==========================
+   Объекты и трансформер
+   ========================== */
 let objectsData = []; // {id, name, node}
 let selectedId = null;
+let idCounter = 1;
 
 const transformer = new Konva.Transformer({
   rotateEnabled: false,
-  enabledAnchors: ['top-left','top-right','bottom-left','bottom-right'],
-  boundBoxFunc: (oldBox, newBox) => newBox.width<20||newBox.height<20?oldBox:newBox
+  // ручки по углам и по краям
+  enabledAnchors:[
+    'top-left','top-center','top-right',
+    'middle-right','bottom-right','bottom-center',
+    'bottom-left','middle-left'
+  ],
+  boundBoxFunc: (oldBox, newBox) => {
+    // минимальный и максимальный размеры (в пикселях)
+    const MIN = 16;
+    const MAX = 4000;
+    if (newBox.width < MIN || newBox.height < MIN) return oldBox;
+    if (newBox.width > MAX || newBox.height > MAX) return oldBox;
+    return newBox;
+  }
 });
 objectLayer.add(transformer);
 
-function addAssetToMap(url, name) {
+/* Добавить ассет на карту.
+   `center` - если true, помещает в центр и выделяет */
+function addAssetToMap(url, name, center = false) {
   Konva.Image.fromURL(url, img => {
+    const baseW = img.width() || 64;
+    const baseH = img.height() || 64;
+    const uid = 'obj_' + (Date.now()) + '_' + (idCounter++);
     img.setAttrs({
-      x: width/2 - 32,
-      y: height/2 - 32,
-      width: 64,
-      height: 64,
+      x: center ? stage.width()/2 - baseW/4 : stage.width()/2 - 32,
+      y: center ? stage.height()/2 - baseH/4 : stage.height()/2 - 32,
+      width: baseW ? baseW/2 : 64,
+      height: baseH ? baseH/2 : 64,
       draggable: true,
-      id: 'obj_'+Date.now()
+      id: uid
     });
-    img.on('click', () => selectObject(img.id()));
+
+    // клики — переключатель выделения
+    img.on('click', (e) => {
+      e.cancelBubble = true; // не дать stage'у обработать как клик по пустому месту
+      toggleSelect(img.id());
+    });
+
+    // обновляем список после перетаскивания и трансформа
+    img.on('dragend transformend', () => refreshObjectList());
+
     objectLayer.add(img);
-    objectLayer.draw();
-    objectsData.push({id: img.id(), name, node: img});
+    objectLayer.batchDraw();
+    objectsData.push({id: uid, name, node: img});
+    // выделяем новый объект
+    selectObject(uid);
     refreshObjectList();
+  }, (err) => {
+    console.warn('Не удалось загрузить изображение:', url, err);
   });
 }
 
+/* Список объектов в правой панели */
 const objectsDiv = document.getElementById('objects');
 function refreshObjectList() {
   objectsDiv.innerHTML = '';
   objectsData.forEach(obj => {
+    const node = obj.node;
+    // вычисляем видимый размер (width * scaleX)
+    const visW = Math.round(node.width() * node.scaleX());
+    const visH = Math.round(node.height() * node.scaleY());
+    const x = Math.round(node.x()), y = Math.round(node.y());
     const div = document.createElement('div');
     div.className = 'objItem' + (obj.id === selectedId ? ' active' : '');
-    div.textContent = obj.name;
-    div.addEventListener('click', () => selectObject(obj.id));
+    div.innerHTML = `<strong>${obj.name}</strong>
+                     <div style="font-size:12px;color:#ddd;margin-top:4px;">pos: ${x},${y} • size: ${visW}×${visH}</div>`;
+    div.addEventListener('click', () => toggleSelect(obj.id));
     objectsDiv.appendChild(div);
   });
 }
 
+/* Выделить объект по id (не переключатель) */
 function selectObject(id) {
+  // снимаем подсветку с предыдущего
+  objectsData.forEach(o => {
+    if (o.node) {
+      o.node.strokeEnabled && o.node.strokeEnabled(false);
+      o.node.shadowEnabled && o.node.shadowEnabled(false);
+    }
+  });
+
   selectedId = id;
-  refreshObjectList();
   const target = objectsData.find(o => o.id === id);
-  transformer.nodes(target ? [target.node] : []);
+  if (target && target.node) {
+    transformer.nodes([target.node]);
+    // визуальная подсветка (опционально)
+    target.node.strokeEnabled(true);
+    target.node.stroke('yellow');
+    target.node.strokeWidth(3);
+    target.node.shadowEnabled(true);
+    target.node.shadowColor('black');
+    target.node.shadowBlur(6);
+  } else {
+    transformer.nodes([]);
+  }
+  objectLayer.batchDraw();
+  refreshObjectList();
 }
 
+/* Переключатель: если уже выделен — снимаем, иначе — выделяем */
+function toggleSelect(id) {
+  if (selectedId === id) {
+    // снять выделение
+    deselect();
+  } else {
+    selectObject(id);
+  }
+}
+
+/* Снять выделение */
+function deselect() {
+  if (!selectedId) return;
+  const prev = objectsData.find(o => o.id === selectedId);
+  if (prev && prev.node) {
+    prev.node.strokeEnabled && prev.node.strokeEnabled(false);
+    prev.node.shadowEnabled && prev.node.shadowEnabled(false);
+  }
+  selectedId = null;
+  transformer.nodes([]);
+  objectLayer.batchDraw();
+  refreshObjectList();
+}
+
+/* Удаление выбранного */
 document.getElementById('deleteBtn').addEventListener('click', () => {
   if (!selectedId) return;
   const idx = objectsData.findIndex(o => o.id === selectedId);
   if (idx >= 0) {
     objectsData[idx].node.destroy();
     objectsData.splice(idx, 1);
-    selectedId = null;
-    transformer.nodes([]);
-    objectLayer.draw();
+    deselect();
     refreshObjectList();
   }
 });
 
-document.getElementById('fileInput').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = evt => addAssetToMap(evt.target.result, file.name);
-  reader.readAsDataURL(file);
+/* Очистка выделения при клике по пустому месту */
+stage.on('mousedown', (e) => {
+  // e.target — тот, по чему кликнули; если это stage (фон) или bgLayer — снимаем выделение
+  if (e.target === stage || e.target === bgLayer) {
+    deselect();
+  }
 });
 
-document.getElementById('saveBtn').addEventListener('click', () => {
-  const uri = stage.toDataURL({ pixelRatio: 2 });
-  const link = document.createElement('a');
-  link.download = 'dnd_map.png';
-  link.href = uri;
-  link.click();
-});
-
-// ---------- Масштабирование сцены или объекта ----------
-stage.on('wheel', e => {
+/* ==========================
+   Колёсико: масштаб сцены или объекта
+   ========================== */
+stage.on('wheel', (e) => {
   e.evt.preventDefault();
   const pointer = stage.getPointerPosition();
+  // если есть выбранный объект и указатель над ним — масштабируем объект
   if (selectedId) {
     const target = objectsData.find(o => o.id === selectedId);
-    if (target) {
-      const box = target.node.getClientRect();
-      if (pointer.x >= box.x && pointer.x <= box.x + box.width &&
-          pointer.y >= box.y && pointer.y <= box.y + box.height) {
-        const scaleBy = 1.1;
+    if (target && target.node) {
+      // проверим, есть ли shape под указателем, принадлежащий этому объекту
+      const shapeUnderPointer = stage.getIntersection(pointer);
+      let underTarget = false;
+      let cur = shapeUnderPointer;
+      while (cur) {
+        if (cur === target.node) { underTarget = true; break; }
+        cur = cur.getParent ? cur.getParent() : null;
+      }
+      if (underTarget) {
+        const scaleBy = 1.08;
         const dir = e.evt.deltaY > 0 ? -1 : 1;
-        const oldScale = target.node.scaleX();
-        const newScale = dir > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-        target.node.scale({x:newScale, y:newScale});
-        objectLayer.batchDraw();
-        return;
+        const old = target.node.scaleX() || 1;
+        const newScale = dir > 0 ? old * scaleBy : old / scaleBy;
+        // ограничение масштаба (минимум и максимум)
+        if (newScale >= 0.1 && newScale <= 10) {
+          target.node.scale({ x:newScale, y:newScale });
+          objectLayer.batchDraw();
+          refreshObjectList();
+        }
+        return; // не масштабируем сцену
       }
     }
   }
-  // масштаб всей сцены
-  const scaleBy = 1.1;
+
+  // иначе масштабируем сцену (центрируем на указателе)
+  const scaleBy = 1.08;
   const oldScale = stage.scaleX();
+  const pointerPos = pointer;
+  if (!pointerPos) return;
   const mousePointTo = {
-    x: (pointer.x - stage.x()) / oldScale,
-    y: (pointer.y - stage.y()) / oldScale
+    x: (pointerPos.x - stage.x()) / oldScale,
+    y: (pointerPos.y - stage.y()) / oldScale
   };
-  const direction = e.evt.deltaY > 0 ? -1 : 1;
-  const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-  stage.scale({x:newScale, y:newScale});
+  const dir = e.evt.deltaY > 0 ? -1 : 1;
+  const newScale = dir > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+  stage.scale({ x: newScale, y: newScale });
   const newPos = {
-    x: pointer.x - mousePointTo.x * newScale,
-    y: pointer.y - mousePointTo.y * newScale
+    x: pointerPos.x - mousePointTo.x * newScale,
+    y: pointerPos.y - mousePointTo.y * newScale
   };
   stage.position(newPos);
   stage.batchDraw();
 });
 
-// ---------- Смена фона ----------
+/* ==========================
+   Загрузка собственных ассетов (слева) и фона (справа)
+   ========================== */
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    addAssetToMap(ev.target.result, f.name, true);
+  };
+  reader.readAsDataURL(f);
+  e.target.value = '';
+});
+
+/* Сохранение */
+document.getElementById('saveBtn').addEventListener('click', () => {
+  // если фон — картинка, то он в bgLayer; сетка в gridLayer; объекты — в objectLayer
+  const dataUrl = stage.toDataURL({ pixelRatio: 2 });
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = 'dnd_map.png';
+  a.click();
+});
+
+/* ==========================
+   Фон: выбор и загрузка
+   ========================== */
 const bgSelect = document.getElementById('bgSelect');
 const bgFile = document.getElementById('bgFile');
-let bgImageNode = null;
 
 function setBackground(typeOrUrl) {
-  backgroundLayer.destroyChildren();
-  if (typeOrUrl === 'grid') {
-    drawGrid();
+  // очистим bgLayer
+  bgLayer.destroyChildren();
+  bgLayer.batchDraw();
+
+  if (!typeOrUrl || typeOrUrl === 'grid') {
+    // показываем сетку (gridLayer уже есть)
+    gridLayer.show();
+    bgLayer.batchDraw();
     return;
   }
-  let url = '';
+
+  let url = null;
   if (typeOrUrl === 'parchment') url = 'https://i.ibb.co/7vjsPj4/parchment.jpg';
   if (typeOrUrl === 'stone')     url = 'https://i.ibb.co/m9HgKpP/stone.jpg';
   if (typeOrUrl === 'sand')      url = 'https://i.ibb.co/xMgtcJ8/sand.jpg';
-  if (typeOrUrl.startsWith('data:')) url = typeOrUrl; // custom upload
+  if (!url && typeOrUrl.startsWith('data:')) url = typeOrUrl;
+
   if (!url) return;
 
-  Konva.Image.fromURL(url, img => {
-    img.setAttrs({x:0, y:0, width:stage.width(), height:stage.height()});
-    backgroundLayer.add(img);
-    backgroundLayer.moveToBottom();
-    backgroundLayer.draw();
+  // спрячем сетку позади фона? решаем: сетка остаётся поверх фона, поэтому не скрываем gridLayer.
+  Konva.Image.fromURL(url, (img) => {
+    img.setAttrs({ x: 0, y: 0, width: stage.width(), height: stage.height() });
+    bgLayer.add(img);
+    bgLayer.moveToBottom();
+    bgLayer.batchDraw();
+    gridLayer.batchDraw(); // сетка поверх фона
+  }, (err) => {
+    console.warn('Не удалось загрузить фон', err);
   });
 }
 
-bgSelect.addEventListener('change', e => {
-  setBackground(e.target.value);
+bgSelect.addEventListener('change', (e) => {
+  const v = e.target.value;
+  if (v === 'grid') {
+    bgLayer.destroyChildren();
+    drawGrid();
+  } else {
+    setBackground(v);
+  }
 });
 
-bgFile.addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
+bgFile.addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
   const reader = new FileReader();
-  reader.onload = evt => setBackground(evt.target.result);
-  reader.readAsDataURL(file);
+  reader.onload = (ev) => {
+    // вставляем как data-url фон
+    setBackground(ev.target.result);
+  };
+  reader.readAsDataURL(f);
+  e.target.value = '';
 });
 
+/* ==========================
+   Корректная обработка ресайза окна
+   ========================== */
+window.addEventListener('resize', () => {
+  const newW = Math.max(200, window.innerWidth - (leftW + rightW));
+  const newH = window.innerHeight;
+  stage.width(newW);
+  stage.height(newH);
+  drawGrid();
+  // если есть фон-картинка — растянем её
+  bgLayer.getChildren().each(img => {
+    if (img && img.width) {
+      img.width(stage.width());
+      img.height(stage.height());
+    }
+  });
+  bgLayer.batchDraw();
+  gridLayer.batchDraw();
+  objectLayer.batchDraw();
+});
+
+/* ==========================
+   Инициируем начальный фон (сетка)
+   ========================== */
+drawGrid();
 </script>
 </body>
 </html>
