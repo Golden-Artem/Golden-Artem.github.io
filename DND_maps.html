@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.6.1</title>
+<title>D&D Map Maker — 0.6.2</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
   :root { --left:200px; --right:220px; }
-  html,body { margin:0; height:100%; background:#222; color:#eee; font-family:Arial, sans-serif; }
+  html,body { margin:0; height:100%; background:#222; color:#eee; font-family:Arial,sans-serif; }
   .layout { display:flex; height:100vh; }
   .panel { background:#333; padding:10px; box-sizing:border-box; overflow:auto; }
   .left  { width:var(--left); }
@@ -21,11 +21,11 @@
   .objItem { padding:6px; margin-bottom:6px; background:#4b4b4b; border:1px solid #555; border-radius:6px; cursor:pointer; }
   .objItem.active { background:#c8b56a; color:#000; }
 
-  button, select, input[type=file] {
+  button, input[type=file] {
     width:100%; padding:8px; margin-top:8px;
     border:0; background:#5a5a5a; color:#fff; border-radius:6px; cursor:pointer;
   }
-  button:hover, select:hover, input[type=file]:hover { background:#777; }
+  button:hover, input[type=file]:hover { background:#777; }
 
   .info { font-size:12px; color:#ccc; margin-top:8px; }
 </style>
@@ -33,7 +33,7 @@
 <body>
 <div class="layout">
 
-  <!-- Левая панель ассетов -->
+  <!-- Левая панель -->
   <div class="panel left">
     <h3>Ассеты</h3>
     <div id="assetList"></div>
@@ -51,19 +51,14 @@
     <button id="deleteBtn">Удалить выбранный</button>
 
     <h3 style="margin-top:14px;">Фон</h3>
-    <select id="bgSelect">
-      <option value="grid">Только сетка</option>
-      <option value="parchment">Пергамент</option>
-      <option value="stone">Камень</option>
-      <option value="sand">Песок</option>
-    </select>
     <input id="bgFile" type="file" accept="image/*">
+
     <div class="info">
-      • ЛКМ по пустому месту — перетаскивание карты<br>
+      • ЛКМ по пустому — перетаскивание карты<br>
       • Колёсико вне объекта — масштаб карты<br>
       • Колёсико на объекте — масштаб объекта<br>
       • Клик по объекту — выделение/снятие<br>
-      • Перетаскивание углов — изменение размеров
+      • Углы — изменение размера, кружок сверху — поворот
     </div>
   </div>
 
@@ -83,7 +78,9 @@ const assets = [
   {name:'Комната подземелья', url:'assets/dungeon_room.png'},
   {name:'Сундук',            url:'assets/dungeon_chest.png'},
   {name:'Факел',             url:'assets/dungeon_torch.png'},
-  {name:'Руины',             url:'assets/dungeon_rocks.png'}
+  {name:'Руины',             url:'assets/dungeon_rocks.png'},
+  {name:'Каменная тропинка',  url:'assets/stone_path.png'},
+  {name:'Земляная тропинка',  url:'assets/earth_path.png'}
 ];
 
 /* ---------- Сцена ---------- */
@@ -92,8 +89,8 @@ const stage = new Konva.Stage({
   width: window.innerWidth - (200 + 220),
   height: window.innerHeight
 });
-const backgroundLayer = new Konva.Layer();
-const gridLayer = new Konva.Layer();
+const backgroundLayer = new Konva.Layer();  // для пользовательского фона
+const gridLayer = new Konva.Layer();        // сетка
 const objectLayer = new Konva.Layer();
 stage.add(backgroundLayer);
 stage.add(gridLayer);
@@ -121,7 +118,7 @@ function drawGrid(cell=48){
 }
 drawGrid();
 
-/* Панель ассетов */
+/* Ассеты UI */
 const assetList=document.getElementById('assetList');
 assets.forEach(a=>{
   const d=document.createElement('div');
@@ -134,7 +131,7 @@ assets.forEach(a=>{
 /* Объекты и трансформер */
 let objectsData=[], selectedId=null, idCounter=1;
 const transformer = new Konva.Transformer({
-  rotateEnabled:false,
+  rotateEnabled:true,          // теперь можно вращать
   enabledAnchors:[
     'top-left','top-center','top-right',
     'middle-right','bottom-right','bottom-center',
@@ -257,35 +254,20 @@ document.getElementById('saveBtn').onclick=()=>{
   const a=document.createElement('a'); a.href=uri; a.download='dnd_map.png'; a.click();
 };
 
-/* ---------- Фоны ---------- */
-const BG_URLS = {
-  parchment:'https://upload.wikimedia.org/wikipedia/commons/4/4d/Old_paper_texture_background.jpg',
-  stone:'https://upload.wikimedia.org/wikipedia/commons/0/0b/Granite_texture_background.jpg',
-  sand:'https://upload.wikimedia.org/wikipedia/commons/7/78/Sand_texture.jpg'
-};
-
-function setBackground(typeOrDataUrl){
-  backgroundLayer.destroyChildren();
-  if(!typeOrDataUrl || typeOrDataUrl==='grid'){
-    backgroundLayer.batchDraw();
-    return;
-  }
-  const url = typeOrDataUrl.startsWith('data:') ? typeOrDataUrl : BG_URLS[typeOrDataUrl];
-  if(!url) return;
-  Konva.Image.fromURL(url, img=>{
-    img.setAttrs({x:0,y:0,width:stage.width(),height:stage.height(),listening:false});
-    backgroundLayer.add(img);
-    backgroundLayer.batchDraw();
-    gridLayer.moveToTop();
-    gridLayer.batchDraw();
-  });
-}
-
-document.getElementById('bgSelect').onchange=e=>setBackground(e.target.value);
+/* Загрузка пользовательского фона */
 document.getElementById('bgFile').onchange=e=>{
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=ev=>setBackground(ev.target.result);
+  r.onload=ev=>{
+    backgroundLayer.destroyChildren();
+    Konva.Image.fromURL(ev.target.result, img=>{
+      img.setAttrs({x:0,y:0,width:stage.width(),height:stage.height(),listening:false});
+      backgroundLayer.add(img);
+      backgroundLayer.batchDraw();
+      gridLayer.moveToTop();
+      gridLayer.batchDraw();
+    });
+  };
   r.readAsDataURL(f);
   e.target.value='';
 };
