@@ -2,16 +2,16 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.6 версия</title>
+<title>D&D Map Maker — 0.6.1</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
-  :root { --left-w:200px; --right-w:200px; }
+  :root { --left:200px; --right:220px; }
   html,body { margin:0; height:100%; background:#222; color:#eee; font-family:Arial, sans-serif; }
   .layout { display:flex; height:100vh; }
-  .panel { background:#333; padding:12px; box-sizing:border-box; overflow:auto; }
-  .left  { width:var(--left-w); }
-  .right { width:var(--right-w); }
-  #container { flex:1; background:#444; }
+  .panel { background:#333; padding:10px; box-sizing:border-box; overflow:auto; }
+  .left  { width:var(--left); }
+  .right { width:var(--right); }
+  #container { flex:1; background:#444; cursor:grab; }
 
   h3 { margin:6px 0; font-size:15px; }
   .asset { padding:6px; margin-bottom:8px; background:#4b4b4b; border:1px solid #555; border-radius:6px; cursor:pointer; }
@@ -27,8 +27,7 @@
   }
   button:hover, select:hover, input[type=file]:hover { background:#777; }
 
-  .small { font-size:12px; color:#cfcfcf; margin-top:8px; }
-  .info  { font-size:12px; color:#ddd; margin-top:10px; }
+  .info { font-size:12px; color:#ccc; margin-top:8px; }
 </style>
 </head>
 <body>
@@ -40,13 +39,12 @@
     <div id="assetList"></div>
     <input id="fileInput" type="file" accept="image/*">
     <button id="saveBtn">Сохранить карту (PNG)</button>
-    <div class="small">Положите PNG в папку <code>assets/</code> или загружайте свои через «Выбрать файл».</div>
   </div>
 
-  <!-- Сцена -->
+  <!-- Центральное поле -->
   <div id="container"></div>
 
-  <!-- Правая панель объектов/фона -->
+  <!-- Правая панель -->
   <div class="panel right">
     <h3>Объекты</h3>
     <div id="objects"></div>
@@ -54,21 +52,25 @@
 
     <h3 style="margin-top:14px;">Фон</h3>
     <select id="bgSelect">
-      <option value="grid">Сетка (по умолчанию)</option>
+      <option value="grid">Только сетка</option>
       <option value="parchment">Пергамент</option>
       <option value="stone">Камень</option>
       <option value="sand">Песок</option>
     </select>
     <input id="bgFile" type="file" accept="image/*">
-    <div class="info">Клик по пустому месту снимает выделение.  
-    Повторный клик по объекту убирает рамку.  
-    Колёсико над выделенным объектом изменяет только его размер.</div>
+    <div class="info">
+      • ЛКМ по пустому месту — перетаскивание карты<br>
+      • Колёсико вне объекта — масштаб карты<br>
+      • Колёсико на объекте — масштаб объекта<br>
+      • Клик по объекту — выделение/снятие<br>
+      • Перетаскивание углов — изменение размеров
+    </div>
   </div>
 
 </div>
 
 <script>
-/* ---------- Настройка ассетов ---------- */
+/* ---------- Ассеты ---------- */
 const assets = [
   {name:'Деревянный дом', url:'assets/wood_house.png'},
   {name:'Каменный дом',   url:'assets/stone_house.png'},
@@ -77,47 +79,55 @@ const assets = [
   {name:'Гильдия',        url:'assets/guild.png'},
   {name:'Лес',            url:'assets/forest.png'},
   {name:'Поляна',         url:'assets/clearing.png'},
-  // Подземелье
   {name:'Вход в подземелье', url:'assets/dungeon_entrance.png'},
   {name:'Комната подземелья', url:'assets/dungeon_room.png'},
   {name:'Сундук',            url:'assets/dungeon_chest.png'},
   {name:'Факел',             url:'assets/dungeon_torch.png'},
-  {name:'Камни/руины',       url:'assets/dungeon_rocks.png'}
+  {name:'Руины',             url:'assets/dungeon_rocks.png'}
 ];
 
 /* ---------- Сцена ---------- */
-const leftW = 200, rightW = 200;
 const stage = new Konva.Stage({
   container: 'container',
-  width: window.innerWidth - (leftW + rightW),
+  width: window.innerWidth - (200 + 220),
   height: window.innerHeight
 });
-const bgLayer    = new Konva.Layer();
-const gridLayer  = new Konva.Layer();
-const objectLayer= new Konva.Layer();
-stage.add(bgLayer);
+const backgroundLayer = new Konva.Layer();
+const gridLayer = new Konva.Layer();
+const objectLayer = new Konva.Layer();
+stage.add(backgroundLayer);
 stage.add(gridLayer);
 stage.add(objectLayer);
 
 /* Сетка */
-function drawGrid(cell=48) {
+function drawGrid(cell=48){
   gridLayer.destroyChildren();
-  const w = stage.width(), h = stage.height();
-  for(let i=0;i<=w/cell;i++)
-    gridLayer.add(new Konva.Line({points:[i*cell,0,i*cell,h], stroke:'#666', strokeWidth:1}));
-  for(let j=0;j<=h/cell;j++)
-    gridLayer.add(new Konva.Line({points:[0,j*cell,w,j*cell], stroke:'#666', strokeWidth:1}));
+  const w=stage.width(), h=stage.height();
+  for(let i=0;i<=w/cell;i++){
+    gridLayer.add(new Konva.Line({
+      points:[i*cell,0,i*cell,h],
+      stroke:'rgba(255,255,255,0.25)',
+      strokeWidth:1
+    }));
+  }
+  for(let j=0;j<=h/cell;j++){
+    gridLayer.add(new Konva.Line({
+      points:[0,j*cell,w,j*cell],
+      stroke:'rgba(255,255,255,0.25)',
+      strokeWidth:1
+    }));
+  }
   gridLayer.batchDraw();
 }
 drawGrid();
 
 /* Панель ассетов */
-const assetList = document.getElementById('assetList');
+const assetList=document.getElementById('assetList');
 assets.forEach(a=>{
   const d=document.createElement('div');
   d.className='asset';
-  d.innerHTML=`<strong>${a.name}</strong><img class="thumb" src="${a.url}" alt="">`;
-  d.onclick=()=>addAssetToMap(a.url,a.name,true);
+  d.innerHTML=`<strong>${a.name}</strong><img class="thumb" src="${a.url}">`;
+  d.onclick=()=>addAsset(a.url,a.name);
   assetList.appendChild(d);
 });
 
@@ -130,23 +140,27 @@ const transformer = new Konva.Transformer({
     'middle-right','bottom-right','bottom-center',
     'bottom-left','middle-left'
   ],
-  boundBoxFunc:(oldB,newB)=>{
-    if(newB.width<16||newB.height<16) return oldB;
-    return newB;
+  boundBoxFunc:(oldBox,newBox)=>{
+    if(newBox.width<16||newBox.height<16) return oldBox;
+    return newBox;
   }
 });
 objectLayer.add(transformer);
 
-function addAssetToMap(url,name,center){
+function addAsset(url,name){
   Konva.Image.fromURL(url,img=>{
-    const w=img.width()||64,h=img.height()||64;
-    const id='obj_'+(Date.now())+'_'+(idCounter++);
+    const w = img.width() || 64;
+    const h = img.height() || 64;
+    const id = 'obj_' + Date.now() + '_' + (idCounter++);
     img.setAttrs({
-      x:center?stage.width()/2-w/4:stage.width()/2-32,
-      y:center?stage.height()/2-h/4:stage.height()/2-32,
-      width:w/2,height:h/2, draggable:true, id
+      x: stage.width()/2 - w/4,
+      y: stage.height()/2 - h/4,
+      width: w/2,
+      height: h/2,
+      draggable: true,
+      id
     });
-    img.on('click',e=>{e.cancelBubble=true;toggleSelect(id);});
+    img.on('click',e=>{ e.cancelBubble=true; toggleSelect(id); });
     img.on('dragend transformend',refreshObjectList);
     objectLayer.add(img);
     objectsData.push({id,name,node:img});
@@ -159,37 +173,23 @@ const objectsDiv=document.getElementById('objects');
 function refreshObjectList(){
   objectsDiv.innerHTML='';
   objectsData.forEach(o=>{
-    const n=o.node, x=Math.round(n.x()), y=Math.round(n.y());
-    const w=Math.round(n.width()*n.scaleX()), h=Math.round(n.height()*n.scaleY());
     const div=document.createElement('div');
     div.className='objItem'+(o.id===selectedId?' active':'');
-    div.innerHTML=`<strong>${o.name}</strong>
-      <div style="font-size:12px;">${x},${y} • ${w}×${h}</div>`;
+    div.textContent=o.name;
     div.onclick=()=>toggleSelect(o.id);
     objectsDiv.appendChild(div);
   });
 }
 
 function selectObject(id){
-  objectsData.forEach(o=>{o.node.strokeEnabled(false);o.node.shadowEnabled(false);});
   selectedId=id;
-  const t=objectsData.find(o=>o.id===id);
-  if(t){
-    transformer.nodes([t.node]);
-    t.node.strokeEnabled(true); t.node.stroke('yellow'); t.node.strokeWidth(3);
-    t.node.shadowEnabled(true); t.node.shadowColor('black'); t.node.shadowBlur(6);
-  } else transformer.nodes([]);
+  transformer.nodes([objectsData.find(o=>o.id===id).node]);
   objectLayer.batchDraw();
   refreshObjectList();
 }
-function toggleSelect(id){ selectedId===id?deselect():selectObject(id); }
-function deselect(){
-  if(!selectedId) return;
-  const t=objectsData.find(o=>o.id===selectedId);
-  if(t){ t.node.strokeEnabled(false); t.node.shadowEnabled(false); }
-  selectedId=null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList();
-}
-stage.on('mousedown',e=>{ if(e.target===stage||e.target===bgLayer) deselect(); });
+function toggleSelect(id){ selectedId===id ? deselect() : selectObject(id); }
+function deselect(){ selectedId=null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList(); }
+stage.on('mousedown',e=>{ if(e.target===stage||e.target===backgroundLayer||e.target===gridLayer) deselect(); });
 
 /* Удаление */
 document.getElementById('deleteBtn').onclick=()=>{
@@ -198,7 +198,7 @@ document.getElementById('deleteBtn').onclick=()=>{
   if(i>=0){ objectsData[i].node.destroy(); objectsData.splice(i,1); deselect(); refreshObjectList(); }
 };
 
-/* Колёсико: объект или сцена */
+/* Масштаб: объект или сцена */
 stage.on('wheel',e=>{
   e.evt.preventDefault();
   const ptr=stage.getPointerPosition();
@@ -207,7 +207,7 @@ stage.on('wheel',e=>{
     if(t && stage.getIntersection(ptr)===t.node){
       const k=e.evt.deltaY>0?0.9:1.1;
       const s=t.node.scaleX()*k;
-      if(s>0.1 && s<10){ t.node.scale({x:s,y:s}); objectLayer.batchDraw(); refreshObjectList(); }
+      if(s>0.1 && s<10){ t.node.scale({x:s,y:s}); objectLayer.batchDraw(); }
       return;
     }
   }
@@ -221,43 +221,68 @@ stage.on('wheel',e=>{
   stage.batchDraw();
 });
 
-/* Загрузка своего ассета */
+/* Панорамирование сцены */
+let isPanning=false,lastPos=null;
+const cont=document.getElementById('container');
+cont.addEventListener('mousedown',e=>{
+  const target=stage.getIntersection(stage.getPointerPosition());
+  if(!target){
+    isPanning=true;
+    cont.style.cursor='grabbing';
+    lastPos={x:e.clientX,y:e.clientY};
+  }
+});
+cont.addEventListener('mousemove',e=>{
+  if(!isPanning) return;
+  const dx=e.clientX-lastPos.x, dy=e.clientY-lastPos.y;
+  lastPos={x:e.clientX,y:e.clientY};
+  stage.position({x:stage.x()+dx, y:stage.y()+dy});
+  stage.batchDraw();
+});
+cont.addEventListener('mouseup',()=>{isPanning=false; cont.style.cursor='grab';});
+cont.addEventListener('mouseleave',()=>{isPanning=false; cont.style.cursor='grab';});
+
+/* Загрузка своих ассетов */
 document.getElementById('fileInput').onchange=e=>{
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=ev=>addAssetToMap(ev.target.result,f.name,true);
+  r.onload=ev=>addAsset(ev.target.result,f.name);
   r.readAsDataURL(f);
   e.target.value='';
 };
 
-/* Сохранение */
+/* Сохранение карты */
 document.getElementById('saveBtn').onclick=()=>{
   const uri=stage.toDataURL({pixelRatio:2});
   const a=document.createElement('a'); a.href=uri; a.download='dnd_map.png'; a.click();
 };
 
 /* ---------- Фоны ---------- */
-const bgSelect=document.getElementById('bgSelect');
-const bgFile=document.getElementById('bgFile');
-const BG_URLS={
+const BG_URLS = {
   parchment:'https://upload.wikimedia.org/wikipedia/commons/4/4d/Old_paper_texture_background.jpg',
   stone:'https://upload.wikimedia.org/wikipedia/commons/0/0b/Granite_texture_background.jpg',
   sand:'https://upload.wikimedia.org/wikipedia/commons/7/78/Sand_texture.jpg'
 };
 
-function setBackground(typeOrUrl){
-  bgLayer.destroyChildren();
-  if(!typeOrUrl||typeOrUrl==='grid'){ gridLayer.show(); bgLayer.batchDraw(); return; }
-  const url = typeOrUrl.startsWith('data:') ? typeOrUrl : BG_URLS[typeOrUrl];
+function setBackground(typeOrDataUrl){
+  backgroundLayer.destroyChildren();
+  if(!typeOrDataUrl || typeOrDataUrl==='grid'){
+    backgroundLayer.batchDraw();
+    return;
+  }
+  const url = typeOrDataUrl.startsWith('data:') ? typeOrDataUrl : BG_URLS[typeOrDataUrl];
   if(!url) return;
-  Konva.Image.fromURL(url,img=>{
+  Konva.Image.fromURL(url, img=>{
     img.setAttrs({x:0,y:0,width:stage.width(),height:stage.height(),listening:false});
-    bgLayer.add(img); bgLayer.moveToBottom(); bgLayer.batchDraw();
-    gridLayer.moveToTop(); gridLayer.batchDraw();
+    backgroundLayer.add(img);
+    backgroundLayer.batchDraw();
+    gridLayer.moveToTop();
+    gridLayer.batchDraw();
   });
 }
-bgSelect.onchange=e=>{ const v=e.target.value; setBackground(v==='grid'?'grid':v); };
-bgFile.onchange=e=>{
+
+document.getElementById('bgSelect').onchange=e=>setBackground(e.target.value);
+document.getElementById('bgFile').onchange=e=>{
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=ev=>setBackground(ev.target.result);
@@ -265,15 +290,17 @@ bgFile.onchange=e=>{
   e.target.value='';
 };
 
-/* Ресайз */
+/* Ресайз окна */
 window.addEventListener('resize',()=>{
-  stage.width(window.innerWidth-(leftW+rightW));
+  stage.width(window.innerWidth - (200 + 220));
   stage.height(window.innerHeight);
+  backgroundLayer.getChildren().forEach(img=>{
+    img.width(stage.width());
+    img.height(stage.height());
+  });
+  backgroundLayer.batchDraw();
   drawGrid();
-  bgLayer.getChildren().each(img=>{img.width(stage.width()); img.height(stage.height());});
-  bgLayer.batchDraw();
 });
 </script>
 </body>
 </html>
-
