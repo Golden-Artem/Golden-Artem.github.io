@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker - 0.6.6</title>
+<title>D&D Map Maker - 0.6.7</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
   :root { --left:200px; --right:260px; }
@@ -65,12 +65,8 @@
     <button id="brushToggle">Включить кисть</button>
 
     <div class="info">
-      • ЛКМ по пустому — перетаскивание карты (когда кисть выключена)<br>
-      • Колёсико вне объекта — масштаб карты<br>
-      • Колёсико на объекте — масштаб объекта<br>
-      • Клик по объекту — выделение/снятие<br>
-      • Углы — изменение размера, кружок сверху — поворот<br>
-      • Кисть: зажмите ЛКМ и ведите мышь, чтобы «проложить» выбранную тропинку
+      • Кисть: ЛКМ и ведите мышь, чтобы проложить выбранную тропинку<br>
+      • Когда кисть выключена — ЛКМ по пустому двигает карту
     </div>
   </div>
 
@@ -246,18 +242,19 @@ stage.on('wheel',e=>{
   stage.batchDraw();
 });
 
-/* -------- Панорамирование сцены (только если кисть выключена) -------- */
+/* -------- Панорамирование сцены -------- */
 let isPanning=false,lastPos=null;
 const cont=document.getElementById('container');
-cont.addEventListener('mousedown',e=>{
-  if (brushActive) return; // блок панорамирования при активной кисти
+function startPan(e){
+  if (brushActive) return;
   const target=stage.getIntersection(stage.getPointerPosition());
   if(!target){
     isPanning=true;
     cont.style.cursor='grabbing';
     lastPos={x:e.clientX,y:e.clientY};
   }
-});
+}
+cont.addEventListener('mousedown',startPan);
 cont.addEventListener('mousemove',e=>{
   if (brushActive) return;
   if(!isPanning) return;
@@ -269,7 +266,6 @@ cont.addEventListener('mousemove',e=>{
 cont.addEventListener('mouseup',()=>{ if(!brushActive){isPanning=false; cont.style.cursor='grab';} });
 cont.addEventListener('mouseleave',()=>{ if(!brushActive){isPanning=false; cont.style.cursor='grab';} });
 
-/* Снятие выделения только если кисть неактивна */
 stage.on('mousedown',e=>{
   if (brushActive) return;
   if (e.target===stage||e.target===backgroundLayer||e.target===gridLayer||e.target===pathLayer) deselect();
@@ -322,37 +318,49 @@ brushToggle.onclick = () => {
 brushWidth.oninput = () => brushWidthVal.textContent = brushWidth.value;
 
 let drawing = false;
-let currentLine = null;
+let lastPoint = null;
+
+function addTextureDot(x,y,texImg,size){
+  const imgNode = new Konva.Image({
+    image: texImg,
+    x: x - size/2,
+    y: y - size/2,
+    width: size,
+    height: size,
+    listening:false
+  });
+  pathLayer.add(imgNode);
+  pathLayer.batchDraw();
+}
 
 stage.on('mousedown touchstart', e => {
   if (!brushActive) return;
   drawing = true;
+  lastPoint = stage.getPointerPosition();
+});
+
+stage.on('mousemove touchmove', e => {
+  if (!drawing || !brushActive) return;
   const pos = stage.getPointerPosition();
   const tex = brushTypeSel.value === 'stone' ? 'assets/stone_path.png' : 'assets/earth_path.png';
   const img = new Image(); img.src = tex;
   img.onload = () => {
-    const pattern = stage.getContext().createPattern(img,'repeat');
-    currentLine = new Konva.Line({
-      stroke: pattern,
-      strokeWidth: parseInt(brushWidth.value),
-      lineCap: 'round',
-      lineJoin: 'round',
-      points: [pos.x, pos.y],
-      globalCompositeOperation:'source-over'
-    });
-    pathLayer.add(currentLine);
+    const dist = Math.hypot(pos.x - lastPoint.x, pos.y - lastPoint.y);
+    const step = parseInt(brushWidth.value) * 0.5;
+    if (dist > step) {
+      const steps = Math.floor(dist / step);
+      for(let i=1;i<=steps;i++){
+        const t=i/steps;
+        const nx=lastPoint.x + (pos.x - lastPoint.x)*t;
+        const ny=lastPoint.y + (pos.y - lastPoint.y)*t;
+        addTextureDot(nx,ny,img,parseInt(brushWidth.value));
+      }
+      lastPoint = pos;
+    }
   };
 });
 
-stage.on('mousemove touchmove', e => {
-  if (!drawing || !currentLine) return;
-  const pos = stage.getPointerPosition();
-  const pts = currentLine.points().concat([pos.x, pos.y]);
-  currentLine.points(pts);
-  pathLayer.batchDraw();
-});
-
-stage.on('mouseup touchend', () => { drawing=false; currentLine=null; });
+stage.on('mouseup touchend', () => { drawing=false; });
 
 /* Ресайз окна */
 window.addEventListener('resize',()=>{
