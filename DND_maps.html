@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.7.2</title>
+<title>D&D Map Maker — 0.7.3</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
-  :root { --left:200px; --right:260px; }
-  html,body { margin:0; height:100%; background:#222; color:#eee; font-family:Arial,sans-serif; }
+  :root { --left:200px; --right:320px; }
+  html,body { margin:0; height:100%; background:#222; color:#eee; font-family:Arial, sans-serif; }
   .layout { display:flex; height:100vh; }
   .panel { background:#333; padding:10px; box-sizing:border-box; overflow:auto; }
   .left  { width:var(--left); }
@@ -18,53 +18,41 @@
     padding:6px; margin-bottom:8px;
     background:#4b4b4b; border:1px solid #555; border-radius:6px; cursor:pointer;
   }
-  .asset img.thumb{max-width:100%;height:auto;display:block;margin-top:4px;}
+  .asset img.thumb{max-width:100%;height:auto;display:block;margin-top:4px;object-fit:contain;}
   .asset:hover { background:#5f5f5f; }
   .objItem.active { background:#c8b56a; color:#000; }
 
-  button, input[type=file] {
+  button, input[type=file], select {
     width:100%; padding:8px; margin-top:8px;
     border:0; background:#5a5a5a; color:#fff; border-radius:6px; cursor:pointer;
+    box-sizing:border-box;
   }
-  button:hover, input[type=file]:hover { background:#777; }
+  button:hover, input[type=file]:hover, select:hover { background:#777; }
+
   .info { font-size:12px; color:#ccc; margin-top:8px; }
 
-  /* ---- персонажи ---- */
-  #charList { margin-top:8px; }
-  .charRow {
-    display:flex;
-    flex-wrap:wrap;          /* переносятся строки */
-    gap:6px;
-    align-items:center;
-    background:#4b4b4b;
-    padding:6px;
-    border-radius:6px;
-    margin-bottom:8px;
+  /* персонажи (панель) */
+  .charItem {
+    background:#3f3f3f; border:1px solid #555;
+    padding:8px; margin-bottom:8px; border-radius:6px;
   }
-  .charRow img {
-    width:40px;height:40px;border-radius:4px;object-fit:cover;cursor:pointer;
+  .charRow { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .charRow img { width:48px; height:48px; border-radius:6px; object-fit:cover; cursor:pointer; border:2px solid #222; }
+  .charRow input[type=number], .charRow input[type=text] {
+    padding:6px; border-radius:4px; border:0; background:#555; color:#fff;
   }
-  .charRow label { font-size:12px; }
-  .charRow input[type=number] {
-    flex:1 1 60px;
-    max-width:70px;
-    padding:4px;
-    border:0;
-    border-radius:4px;
-    background:#555;
-    color:#fff;
-  }
-  .charRow input[type=text] {
-    flex:1 1 100%;
-    max-width:120px;
-    padding:4px;
-    border:0;
-    border-radius:4px;
-    background:#555;
-    color:#fff;
-  }
-  .diceBtn { width:48px; margin:2px; }
+  .charRow input[type=number] { width:72px; max-width:72px; }
+  .charRow input[type=text] { flex:1 1 120px; max-width:150px; }
+  .charBtns { display:flex; gap:6px; margin-top:8px; }
+  .charBtns button { flex:1; padding:6px; }
+
+  /* кубики */
+  .diceBtns { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .diceBtns button { flex:1 1 48px; padding:6px; }
   #diceResult { margin-top:6px; font-weight:bold; text-align:center; }
+
+  /* token visual tweaks ensure on top */
+  canvas { image-rendering: optimizeSpeed; }
 </style>
 </head>
 <body>
@@ -96,29 +84,32 @@
     <h3 style="margin-top:14px;">Фон</h3>
     <input id="bgFile" type="file" accept="image/*">
 
-    <h3 style="margin-top:14px;">Персонажи</h3>
-    <input id="addCharImg" type="file" accept="image/*">
-    <div id="charList"></div>
+    <h3 style="margin-top:14px;">Персонажи (токены)</h3>
+    <button id="addCharBtn">Добавить персонажа</button>
+    <div id="characters"></div>
 
-    <h3 style="margin-top:14px;">Кубики</h3>
-    <div>
-      <button class="diceBtn" onclick="roll(4)">d4</button>
-      <button class="diceBtn" onclick="roll(6)">d6</button>
-      <button class="diceBtn" onclick="roll(8)">d8</button>
-      <button class="diceBtn" onclick="roll(12)">d12</button>
-      <button class="diceBtn" onclick="roll(20)">d20</button>
+    <h3 style="margin-top:12px;">Кубики</h3>
+    <div class="diceBtns">
+      <button onclick="roll(4)">d4</button>
+      <button onclick="roll(6)">d6</button>
+      <button onclick="roll(8)">d8</button>
+      <button onclick="roll(12)">d12</button>
+      <button onclick="roll(20)">d20</button>
     </div>
-    <div id="diceResult">–</div>
+    <div id="diceResult">—</div>
 
     <div class="info">
       • ЛКМ по пустому — перетаскивание карты<br>
       • Колёсико — масштаб сцены или объекта<br>
-      • Клик по объекту — выделение/снятие<br>
-      • Углы — изменение размера, кружок сверху — поворот
+      • Клик по токену — выделить персонажа (подсветка рамки)<br>
+      • Токены находятся на отдельном слое поверх объектов
     </div>
   </div>
 
 </div>
+
+<!-- скрытые input'ы -->
+<input id="charImageInput" type="file" accept="image/*" style="display:none">
 
 <script>
 /* ---------- Ассеты ---------- */
@@ -139,123 +130,113 @@ const assets = [
   {name:'Земляная тропинка',  url:'assets/earth_path.png'}
 ];
 
-/* ---------- Сцена ---------- */
+/* ---------- Stage и слои ---------- */
 const stage = new Konva.Stage({
   container: 'container',
-  width: window.innerWidth - (200 + 260),
+  width: window.innerWidth - (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--left')) + parseInt(getComputedStyle(document.documentElement).getPropertyValue('--right'))),
   height: window.innerHeight
 });
 const backgroundLayer = new Konva.Layer();
 const gridLayer = new Konva.Layer();
 const objectLayer = new Konva.Layer();
+const tokenLayer = new Konva.Layer();
 stage.add(backgroundLayer);
 stage.add(gridLayer);
 stage.add(objectLayer);
+stage.add(tokenLayer);
 
 /* Сетка */
 function drawGrid(cell=48){
   gridLayer.destroyChildren();
-  const w=stage.width(), h=stage.height();
-  for(let i=0;i<=w/cell;i++){
-    gridLayer.add(new Konva.Line({
-      points:[i*cell,0,i*cell,h],
-      stroke:'rgba(255,255,255,0.25)', strokeWidth:1
-    }));
+  const w = stage.width(), h = stage.height();
+  for(let i=0;i<=Math.ceil(w/cell);i++){
+    gridLayer.add(new Konva.Line({ points:[i*cell,0,i*cell,h], stroke:'rgba(255,255,255,0.12)', strokeWidth:1 }));
   }
-  for(let j=0;j<=h/cell;j++){
-    gridLayer.add(new Konva.Line({
-      points:[0,j*cell,w,j*cell],
-      stroke:'rgba(255,255,255,0.25)', strokeWidth:1
-    }));
+  for(let j=0;j<=Math.ceil(h/cell);j++){
+    gridLayer.add(new Konva.Line({ points:[0,j*cell,w,j*cell], stroke:'rgba(255,255,255,0.12)', strokeWidth:1 }));
   }
   gridLayer.batchDraw();
 }
 drawGrid();
 
 /* UI ассетов */
-const assetList=document.getElementById('assetList');
+const assetList = document.getElementById('assetList');
 assets.forEach(a=>{
-  const d=document.createElement('div');
-  d.className='asset';
-  d.innerHTML=`<strong>${a.name}</strong><img class="thumb" src="${a.url}">`;
-  d.onclick=()=>addAsset(a.url,a.name);
+  const d = document.createElement('div');
+  d.className = 'asset';
+  d.innerHTML = `<strong>${a.name}</strong><img class="thumb" src="${a.url}" alt="${a.name}">`;
+  d.onclick = ()=> addAsset(a.url, a.name);
   assetList.appendChild(d);
 });
 
-/* Объекты */
-let objectsData=[], selectedId=null, idCounter=1;
+/* ---------- Объекты (слой объектов) ---------- */
+let objectsData = []; // {id,name,url,node}
+let selectedId = null;
+let idCounter = 1;
+
 const transformer = new Konva.Transformer({
-  rotateEnabled:true,
-  enabledAnchors:[
-    'top-left','top-center','top-right',
-    'middle-right','bottom-right','bottom-center',
-    'bottom-left','middle-left'
-  ],
-  boundBoxFunc:(oldBox,newBox)=>{
-    if(newBox.width<16||newBox.height<16) return oldBox;
-    return newBox;
-  }
+  rotateEnabled: true,
+  enabledAnchors: ['top-left','top-right','bottom-left','bottom-right','middle-left','middle-right','top-center','bottom-center'],
+  boundBoxFunc:(oldBox,newBox)=> (newBox.width<8 || newBox.height<8) ? oldBox : newBox
 });
 objectLayer.add(transformer);
 
-function addAsset(url,name,x=null,y=null,extra={}) {
-  Konva.Image.fromURL(url,img=>{
-    const w=img.width()||64, h=img.height()||64;
-    const id='obj_'+Date.now()+'_'+(idCounter++);
+function addAsset(url,name,x=null,y=null,extra={}){
+  Konva.Image.fromURL(url, img=>{
+    const w = img.width() || 64, h = img.height() || 64;
+    const id = 'obj_' + Date.now() + '_' + (idCounter++);
     img.setAttrs({
       x: x ?? stage.width()/2 - w/4,
       y: y ?? stage.height()/2 - h/4,
-      width: w/2,
-      height: h/2,
+      width: extra.width ?? Math.round(w/2),
+      height: extra.height ?? Math.round(h/2),
       draggable: true,
       id,
       ...extra
     });
-    img.on('click',e=>{ e.cancelBubble=true; toggleSelect(id); });
-    img.on('dragend transformend',refreshObjectList);
+    img.on('click', e => { e.cancelBubble = true; toggleSelect(id); });
+    img.on('dragend transformend', refreshObjectList);
     objectLayer.add(img);
-    objectsData.push({id,name,url,node:img});
+    objectsData.push({id, name, url, node: img});
     selectObject(id);
     refreshObjectList();
   });
 }
 
-const objectsDiv=document.getElementById('objects');
+const objectsDiv = document.getElementById('objects');
 function refreshObjectList(){
-  objectsDiv.innerHTML='';
+  objectsDiv.innerHTML = '';
   objectsData.forEach(o=>{
-    const div=document.createElement('div');
-    div.className='objItem'+(o.id===selectedId?' active':'');
-    div.textContent=o.name;
-    div.onclick=()=>toggleSelect(o.id);
+    const div = document.createElement('div');
+    div.className = 'objItem' + (o.id === selectedId ? ' active' : '');
+    div.textContent = o.name;
+    div.onclick = ()=> toggleSelect(o.id);
     objectsDiv.appendChild(div);
   });
 }
-
 function selectObject(id){
-  selectedId=id;
-  transformer.nodes([objectsData.find(o=>o.id===id).node]);
+  selectedId = id;
+  const entry = objectsData.find(o=>o.id === id);
+  if(entry) transformer.nodes([entry.node]);
   objectLayer.batchDraw();
   refreshObjectList();
 }
-function toggleSelect(id){ selectedId===id ? deselect() : selectObject(id); }
-function deselect(){ selectedId=null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList(); }
-stage.on('mousedown',e=>{ if(e.target===stage||e.target===backgroundLayer||e.target===gridLayer) deselect(); });
+function toggleSelect(id){ selectedId === id ? deselect() : selectObject(id); }
+function deselect(){ selectedId = null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList(); }
+stage.on('mousedown', e => { if(e.target===stage || e.target === backgroundLayer || e.target === gridLayer) deselect(); });
 
-/* Удаление */
-deleteBtn.onclick=()=>{
+/* Удаление / копирование / зеркало / слои */
+document.getElementById('deleteBtn').onclick = ()=>{
   if(!selectedId) return;
-  const i=objectsData.findIndex(o=>o.id===selectedId);
+  const i = objectsData.findIndex(o=>o.id===selectedId);
   if(i>=0){ objectsData[i].node.destroy(); objectsData.splice(i,1); deselect(); refreshObjectList(); }
 };
-
-/* Копирование */
-copyBtn.onclick=()=>{
+document.getElementById('copyBtn').onclick = ()=>{
   if(!selectedId) return;
-  const obj=objectsData.find(o=>o.id===selectedId);
+  const obj = objectsData.find(o=>o.id===selectedId);
   if(!obj) return;
-  const n=obj.node;
-  const pos=stage.getPointerPosition() || {x:n.x()+20,y:n.y()+20};
+  const n = obj.node;
+  const pos = stage.getPointerPosition() || {x:n.x()+20,y:n.y()+20};
   addAsset(obj.url, obj.name+' (копия)', pos.x, pos.y, {
     width: n.width(),
     height: n.height(),
@@ -264,91 +245,75 @@ copyBtn.onclick=()=>{
     rotation: n.rotation()
   });
 };
-
-/* Зеркалирование */
-mirrorBtn.onclick=()=>{
+document.getElementById('mirrorBtn').onclick = ()=>{
   if(!selectedId) return;
-  const obj=objectsData.find(o=>o.id===selectedId);
-  obj.node.scaleX(obj.node.scaleX()*-1);
+  const obj = objectsData.find(o=>o.id===selectedId);
+  obj.node.scaleX(obj.node.scaleX() * -1);
   objectLayer.batchDraw();
 };
+document.getElementById('layerUpBtn').onclick = ()=>{ if(!selectedId) return; objectsData.find(o=>o.id===selectedId).node.moveUp(); objectLayer.batchDraw(); };
+document.getElementById('layerDownBtn').onclick = ()=>{ if(!selectedId) return; objectsData.find(o=>o.id===selectedId).node.moveDown(); objectLayer.batchDraw(); };
 
-/* --- Слои --- */
-layerUpBtn.onclick=()=>{
-  if(!selectedId) return;
-  const obj=objectsData.find(o=>o.id===selectedId);
-  obj.node.moveUp();
-  objectLayer.batchDraw();
-};
-layerDownBtn.onclick=()=>{
-  if(!selectedId) return;
-  const obj=objectsData.find(o=>o.id===selectedId);
-  obj.node.moveDown();
-  objectLayer.batchDraw();
-};
-
-/* Масштабирование */
-stage.on('wheel',e=>{
+/* Масштаб сцены/объекта */
+stage.on('wheel', e=>{
   e.evt.preventDefault();
-  const ptr=stage.getPointerPosition();
+  const ptr = stage.getPointerPosition();
   if(selectedId){
-    const t=objectsData.find(o=>o.id===selectedId);
-    if(t && stage.getIntersection(ptr)===t.node){
-      const k=e.evt.deltaY>0?0.9:1.1;
-      const s=t.node.scaleX()*k;
-      if(s>0.1 && s<10){ t.node.scale({x:s,y:s}); objectLayer.batchDraw(); }
+    const t = objectsData.find(o=>o.id===selectedId);
+    if(t && stage.getIntersection(ptr) === t.node){
+      const k = e.evt.deltaY > 0 ? 0.9 : 1.1;
+      const s = t.node.scaleX() * k;
+      if(s > 0.1 && s < 10){ t.node.scale({x:s,y:s}); objectLayer.batchDraw(); }
       return;
     }
   }
-  const scaleBy=1.1;
-  const old=stage.scaleX();
-  const mp={x:(ptr.x-stage.x())/old,y:(ptr.y-stage.y())/old};
-  const dir=e.evt.deltaY>0?-1:1;
-  const newS=dir>0?old*scaleBy:old/scaleBy;
+  const scaleBy = 1.1;
+  const old = stage.scaleX();
+  const mp = { x: (ptr.x - stage.x()) / old, y: (ptr.y - stage.y()) / old };
+  const dir = e.evt.deltaY > 0 ? -1 : 1;
+  const newS = dir > 0 ? old * scaleBy : old / scaleBy;
   stage.scale({x:newS,y:newS});
-  stage.position({x:ptr.x-mp.x*newS,y:ptr.y-mp.y*newS});
+  stage.position({x: ptr.x - mp.x*newS, y: ptr.y - mp.y*newS});
   stage.batchDraw();
 });
 
 /* Панорамирование сцены */
-let isPanning=false,lastPos=null;
-const cont=document.getElementById('container');
-cont.addEventListener('mousedown',e=>{
-  const target=stage.getIntersection(stage.getPointerPosition());
+let isPanning=false, lastPos=null;
+const cont = document.getElementById('container');
+cont.addEventListener('mousedown', e=>{
+  const target = stage.getIntersection(stage.getPointerPosition());
   if(!target){
-    isPanning=true;
-    cont.style.cursor='grabbing';
-    lastPos={x:e.clientX,y:e.clientY};
+    isPanning=true; cont.style.cursor='grabbing'; lastPos={x:e.clientX,y:e.clientY};
   }
 });
-cont.addEventListener('mousemove',e=>{
+cont.addEventListener('mousemove', e=>{
   if(!isPanning) return;
   const dx=e.clientX-lastPos.x, dy=e.clientY-lastPos.y;
   lastPos={x:e.clientX,y:e.clientY};
-  stage.position({x:stage.x()+dx, y:stage.y()+dy});
+  stage.position({x: stage.x()+dx, y: stage.y()+dy});
   stage.batchDraw();
 });
-cont.addEventListener('mouseup',()=>{isPanning=false; cont.style.cursor='grab';});
-cont.addEventListener('mouseleave',()=>{isPanning=false; cont.style.cursor='grab';});
+cont.addEventListener('mouseup', ()=>{ isPanning=false; cont.style.cursor='grab'; });
+cont.addEventListener('mouseleave', ()=>{ isPanning=false; cont.style.cursor='grab'; });
 
 /* Загрузка своих ассетов */
-fileInput.onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=ev=>addAsset(ev.target.result,f.name);
+document.getElementById('fileInput').onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => addAsset(ev.target.result, f.name);
   r.readAsDataURL(f);
-  e.target.value='';
+  e.target.value = '';
 };
 
-/* Сохранение карты как PNG */
-savePngBtn.onclick=()=>{
-  const uri=stage.toDataURL({pixelRatio:2});
-  const a=document.createElement('a'); a.href=uri; a.download='dnd_map.png'; a.click();
+/* Сохранение PNG */
+document.getElementById('savePngBtn').onclick = ()=>{
+  const uri = stage.toDataURL({ pixelRatio:2 });
+  const a = document.createElement('a'); a.href = uri; a.download = 'dnd_map.png'; a.click();
 };
 
-/* --- Сохранение/загрузка проекта (JSON) --- */
-saveJsonBtn.onclick=()=>{
-  const data = {
+/* Сохранение/загрузка JSON (включаем персонажей) */
+function exportProject(){
+  return {
     stage: { x: stage.x(), y: stage.y(), scale: stage.scaleX() },
     objects: objectsData.map(o=>({
       name: o.name, url: o.url,
@@ -356,146 +321,323 @@ saveJsonBtn.onclick=()=>{
       width: o.node.width(), height: o.node.height(),
       scaleX: o.node.scaleX(), scaleY: o.node.scaleY(),
       rotation: o.node.rotation(), zIndex: o.node.zIndex()
+    })),
+    characters: characters.map(ch=>({
+      name: ch.name, hp: ch.hp, maxHp: ch.maxHp, cd: ch.cd, speed: ch.speed,
+      url: ch.url, x: ch.x, y: ch.y, size: ch.size
     }))
   };
-  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='dnd_project.json';
-  a.click();
+}
+
+document.getElementById('saveJsonBtn').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(exportProject())], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dnd_project.json'; a.click();
 };
 
-loadJson.onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=ev=>{
+document.getElementById('loadJson').onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev=>{
     const data = JSON.parse(ev.target.result);
+    // clear objects
     objectsData.forEach(o=>o.node.destroy());
-    objectsData=[];
+    objectsData = [];
     deselect();
-    data.objects.sort((a,b)=>a.zIndex-b.zIndex).forEach(obj=>{
-      addAsset(obj.url, obj.name, obj.x, obj.y, {
-        width: obj.width,
-        height: obj.height,
-        scaleX: obj.scaleX,
-        scaleY: obj.scaleY,
-        rotation: obj.rotation
+    (data.objects||[]).sort((a,b)=>a.zIndex-b.zIndex).forEach(o=>{
+      addAsset(o.url, o.name, o.x, o.y, {
+        width: o.width, height: o.height, scaleX: o.scaleX, scaleY: o.scaleY, rotation: o.rotation
       });
     });
-    stage.position({x:data.stage.x, y:data.stage.y});
-    stage.scale({x:data.stage.scale, y:data.stage.scale});
+    // restore stage transform
+    if(data.stage){
+      stage.position({x: data.stage.x||0, y: data.stage.y||0});
+      const s = data.stage.scale || 1; stage.scale({x:s,y:s});
+    }
+    // restore characters
+    // remove previous token nodes
+    characters.forEach(ch=>{ if(ch._group) ch._group.destroy(); });
+    characters = [];
+    (data.characters||[]).forEach((chData)=>{
+      const ch = {
+        name: chData.name || 'Char', hp: chData.hp ?? 10, maxHp: chData.maxHp ?? (chData.hp ?? 10),
+        cd: chData.cd ?? 0, speed: chData.speed ?? 30,
+        url: chData.url || null, x: chData.x, y: chData.y, size: chData.size || 64
+      };
+      characters.push(ch);
+    });
+    characters.forEach((ch, idx)=> createTokenNode(ch, idx));
+    refreshCharacters();
     stage.batchDraw();
   };
   r.readAsText(f);
   e.target.value='';
 };
 
-/* Загрузка пользовательского фона */
-bgFile.onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=ev=>{
+/* Загрузка фонового изображения */
+document.getElementById('bgFile').onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev=>{
     backgroundLayer.destroyChildren();
     Konva.Image.fromURL(ev.target.result, img=>{
-      img.setAttrs({x:0,y:0,width:stage.width(),height:stage.height(),listening:false});
+      img.setAttrs({ x:0, y:0, width: stage.width(), height: stage.height(), listening:false });
       backgroundLayer.add(img);
       backgroundLayer.batchDraw();
       gridLayer.moveToTop();
-      gridLayer.batchDraw();
     });
   };
   r.readAsDataURL(f);
   e.target.value='';
 };
 
-/* ---- Персонажи ---- */
-const charList=document.getElementById('charList');
-addCharImg.onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    const imgUrl=ev.target.result;
-    addCharacter(imgUrl);
-  };
-  r.readAsDataURL(f);
-  e.target.value='';
-};
+/* ---------- Персонажи / токены ---------- */
+let characters = []; // array of characters (data objects)
+let selectedCharacterIndex = null;
+const charDiv = document.getElementById('characters');
+const charImageInput = document.getElementById('charImageInput');
 
-function addCharacter(imgUrl){
-  // иконка на карте
-  Konva.Image.fromURL(imgUrl,img=>{
-    const id='char_'+Date.now();
-    img.setAttrs({
-      x:stage.width()/2-24,
-      y:stage.height()/2-24,
-      width:48,height:48,
-      draggable:true,
-      id
-    });
-    objectLayer.add(img);
-    objectsData.push({id,name:'Персонаж',url:imgUrl,node:img});
-    refreshObjectList();
+// create visual token for character ch at index i
+function createTokenNode(ch, i){
+  // destroy existing
+  if(ch._group && ch._group.destroy) ch._group.destroy();
+
+  const size = ch.size || 64;
+  const group = new Konva.Group({
+    x: (ch.x !== undefined ? ch.x : stage.width()/2 - size/2),
+    y: (ch.y !== undefined ? ch.y : stage.height()/2 - size/2),
+    draggable: true,
+    id: 'char_' + i
   });
 
-  // панель управления
-  const row=document.createElement('div');
-  row.className='charRow';
-  row.innerHTML=`
-    <img src="${imgUrl}" title="Клик для замены">
-    <input type="text" value="Персонаж">
-    <label>HP</label><input type="number" value="10">
-    <label>КД</label><input type="number" value="12">
-    <label>Скорость</label><input type="number" value="30">
-    <button onclick="adjustHP(this,-1)">-1</button>
-    <button onclick="adjustHP(this,1)">+1</button>
-  `;
-  // замена картинки
-  const imgTag=row.querySelector('img');
-  imgTag.onclick=()=>{
-    const inp=document.createElement('input');
-    inp.type='file'; inp.accept='image/*';
-    inp.onchange=ev=>{
-      const f=ev.target.files[0];
-      if(!f) return;
-      const r=new FileReader();
-      r.onload=fr=>{
-        imgTag.src=fr.target.result;
-        // обновить спрайт на карте
-        const obj=objectsData.find(o=>o.url===imgUrl);
-        if(obj){
-          obj.node.image().src=fr.target.result;
-          obj.node.getLayer().batchDraw();
-          obj.url=fr.target.result;
-        }
-      };
-      r.readAsDataURL(f);
+  // border rectangle (highlight)
+  const border = new Konva.Rect({
+    x: 0, y: 0, width: size, height: size, stroke: '#fff', strokeWidth: 2, cornerRadius: 8
+  });
+
+  // avatar image area (inset)
+  const avatar = new Konva.Image({ x:4, y:4, width: size-8, height: size-8, listening: false });
+
+  // HP bar background + fill
+  const hpBg = new Konva.Rect({ x:0, y:size + 6, width: size, height: 8, fill:'#222', cornerRadius:2, listening:false });
+  const hpFill = new Konva.Rect({ x:0, y:size + 6, width: Math.max(1, size * ((ch.hp||0) / (ch.maxHp||ch.hp||1))), height:8, fill:'#e33', cornerRadius:2, listening:false });
+
+  group.add(border, avatar, hpBg, hpFill);
+  tokenLayer.add(group);
+  tokenLayer.moveToTop();
+  tokenLayer.batchDraw();
+
+  // load avatar image if exists
+  if(ch.url){
+    const img = new Image();
+    img.onload = ()=> { avatar.image(img); tokenLayer.batchDraw(); };
+    img.src = ch.url;
+  } else {
+    // draw placeholder
+    const canvas = document.createElement('canvas'); canvas.width = size-8; canvas.height = size-8;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#666'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#aaa'; ctx.textAlign='center'; ctx.font='12px sans-serif';
+    ctx.fillText('avatar', canvas.width/2, canvas.height/2);
+    const img = new Image();
+    img.onload = ()=> { avatar.image(img); tokenLayer.batchDraw(); };
+    img.src = canvas.toDataURL();
+  }
+
+  // events
+  group.on('dragend', ()=>{
+    ch.x = Math.round(group.x());
+    ch.y = Math.round(group.y());
+  });
+
+  group.on('click', e=>{
+    e.cancelBubble = true;
+    selectCharacter(i);
+  });
+
+  // store refs
+  ch._group = group;
+  ch._avatar = avatar;
+  ch._border = border;
+  ch._hpFill = hpFill;
+  ch._size = size;
+  // if was selected, update highlight
+  updateCharacterHighlight();
+}
+
+// update hp bar and refresh UI
+function updateCharacterNode(i){
+  const ch = characters[i];
+  if(!ch) return;
+  const size = ch._size || ch.size || 64;
+  const maxHp = ch.maxHp || ch.hp || 1;
+  const w = Math.max(1, size * (ch.hp / maxHp));
+  if(ch._hpFill) ch._hpFill.width(w);
+  tokenLayer.batchDraw();
+  refreshCharacters();
+}
+
+// select character by index and highlight
+function selectCharacter(i){
+  selectedCharacterIndex = i;
+  updateCharacterHighlight();
+  refreshCharacters();
+}
+function updateCharacterHighlight(){
+  characters.forEach((ch, idx)=>{
+    if(ch._border){
+      ch._border.stroke(idx === selectedCharacterIndex ? '#7df' : '#fff');
+      ch._border.strokeWidth(idx === selectedCharacterIndex ? 3 : 2);
+    }
+  });
+  tokenLayer.batchDraw();
+}
+
+// UI: refresh right-panel list of characters
+function refreshCharacters(){
+  charDiv.innerHTML = '';
+  characters.forEach((ch, i)=>{
+    const el = document.createElement('div');
+    el.className = 'charItem';
+    el.innerHTML = `
+      <div class="charRow">
+        <img id="img_${i}" src="${ch.url||''}" alt="${escapeHtml(ch.name)}">
+        <input id="name_${i}" type="text" value="${escapeHtml(ch.name)}">
+        <label>HP</label><input id="hp_${i}" type="number" value="${ch.hp}">
+        <label>КД</label><input id="cd_${i}" type="number" value="${ch.cd}">
+        <label>Скор</label><input id="sp_${i}" type="number" value="${ch.speed}">
+      </div>
+      <div class="charBtns">
+        <button id="btnImg_${i}">Сменить изображение</button>
+        <button id="btnCenter_${i}">Центр на экране</button>
+        <button id="btnDamage_${i}">− Урон</button>
+        <button id="btnHeal_${i}">+ Лечение</button>
+        <button id="btnRemove_${i}">Удалить</button>
+      </div>
+    `;
+    charDiv.appendChild(el);
+
+    // wire inputs
+    el.querySelector(`#name_${i}`).addEventListener('input', e=>{ ch.name = e.target.value; });
+    el.querySelector(`#hp_${i}`).addEventListener('input', e=>{
+      ch.hp = Number(e.target.value) || 0;
+      if(!ch.maxHp) ch.maxHp = ch.hp;
+      updateCharacterNode(i);
+    });
+    el.querySelector(`#cd_${i}`).addEventListener('input', e=>{ ch.cd = Number(e.target.value)||0; });
+    el.querySelector(`#sp_${i}`).addEventListener('input', e=>{ ch.speed = Number(e.target.value)||0; });
+
+    // change image
+    el.querySelector(`#btnImg_${i}`).addEventListener('click', ()=>{
+      charImageInput.dataset.index = i;
+      charImageInput.click();
+    });
+
+    // center view on token
+    el.querySelector(`#btnCenter_${i}`).addEventListener('click', ()=>{
+      const g = ch._group;
+      if(!g) return;
+      const gs = stage.scaleX();
+      stage.position({ x: stage.width()/2 - g.x()*gs, y: stage.height()/2 - g.y()*gs });
+      stage.batchDraw();
+    });
+
+    el.querySelector(`#btnDamage_${i}`).addEventListener('click', ()=> damageCharPrompt(i));
+    el.querySelector(`#btnHeal_${i}`).addEventListener('click', ()=> healCharPrompt(i));
+    el.querySelector(`#btnRemove_${i}`).addEventListener('click', ()=>{
+      if(!confirm('Удалить персонажа?')) return;
+      if(ch._group) ch._group.destroy();
+      characters.splice(i,1);
+      // rebuild nodes (indexes changed)
+      characters.forEach((c, idx)=>{ if(c._group) c._group.destroy(); });
+      characters.forEach((c, idx)=> createTokenNode(c, idx));
+      selectedCharacterIndex = null;
+      refreshCharacters();
+    });
+
+    // clicking avatar in panel should also open change image
+    el.querySelector(`#img_${i}`).addEventListener('click', ()=>{
+      charImageInput.dataset.index = i; charImageInput.click();
+    });
+
+  });
+}
+
+// add new character (prompt for name, then create token and open file dialog)
+document.getElementById('addCharBtn').addEventListener('click', ()=>{
+  const name = prompt('Имя персонажа:', 'Герой');
+  if(!name) return;
+  const ch = { name, hp:10, maxHp:10, cd:0, speed:30, url:null, x: undefined, y: undefined, size: 64 };
+  characters.push(ch);
+  const idx = characters.length - 1;
+  createTokenNode(ch, idx);
+  refreshCharacters();
+  // optional: open file dialog to upload avatar
+  charImageInput.dataset.index = idx;
+  charImageInput.click();
+});
+
+// handle image selection for a character (updates existing token, no duplication)
+charImageInput.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  const idx = Number(charImageInput.dataset.index);
+  if(!f || !Number.isFinite(idx) || !characters[idx]) { charImageInput.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dataUrl = ev.target.result;
+    const ch = characters[idx];
+    ch.url = dataUrl;
+    // update avatar image node if exists
+    const img = new Image();
+    img.onload = ()=> {
+      if(ch._avatar){ ch._avatar.image(img); tokenLayer.batchDraw(); }
+      else createTokenNode(ch, idx);
+      refreshCharacters();
     };
-    inp.click();
+    img.src = dataUrl;
+    charImageInput.value = '';
   };
-  charList.appendChild(row);
+  reader.readAsDataURL(f);
+});
+
+// hp adjust prompts
+function damageCharPrompt(i){
+  const val = Number(prompt('Нанести урон (HP):', '1')) || 0;
+  characters[i].hp = Math.max(0, (characters[i].hp||0) - val);
+  updateCharacterNode(i);
+}
+function healCharPrompt(i){
+  const val = Number(prompt('Восстановить HP:', '1')) || 0;
+  characters[i].hp = (characters[i].hp||0) + val;
+  if(!characters[i].maxHp) characters[i].maxHp = characters[i].hp;
+  updateCharacterNode(i);
 }
 
-function adjustHP(btn,delta){
-  const hpInput=btn.parentElement.querySelector('input[type=number]');
-  hpInput.value=parseInt(hpInput.value)+delta;
-}
-
-/* ---- Кубики ---- */
+/* ---------- Dice (кубики) ---------- */
 function roll(sides){
   const val = 1 + Math.floor(Math.random()*sides);
-  document.getElementById('diceResult').textContent = 'Результат: d'+sides+' → '+val;
+  document.getElementById('diceResult').textContent = `Результат: d${sides} → ${val}`;
 }
 
-/* Ресайз окна */
-window.addEventListener('resize',()=>{
-  stage.width(window.innerWidth - (200 + 260));
+/* ---------- Resize ---------- */
+window.addEventListener('resize', ()=>{
+  stage.width(window.innerWidth - (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--left')) + parseInt(getComputedStyle(document.documentElement).getPropertyValue('--right'))));
   stage.height(window.innerHeight);
-  backgroundLayer.getChildren().forEach(img=>{
-    img.width(stage.width());
-    img.height(stage.height());
-  });
+  backgroundLayer.getChildren().forEach(img=>{ img.width(stage.width()); img.height(stage.height()); });
   backgroundLayer.batchDraw();
   drawGrid();
+});
+
+/* ---------- Utilities ---------- */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ensure clicking empty area deselects both objects and characters */
+stage.on('mousedown', e=>{
+  if (e.target === stage || e.target === backgroundLayer || e.target === gridLayer) {
+    deselect();
+    selectedCharacterIndex = null;
+    updateCharacterHighlight();
+    refreshCharacters();
+  }
 });
 </script>
 </body>
