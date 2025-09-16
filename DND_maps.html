@@ -5,7 +5,7 @@
 <title>D&D Map Maker — 0.6.9</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
-  :root { --left:240px; --right:260px; }
+  :root { --left:200px; --right:240px; }
   html,body { margin:0; height:100%; background:#222; color:#eee; font-family:Arial,sans-serif; }
   .layout { display:flex; height:100vh; }
   .panel { background:#333; padding:10px; box-sizing:border-box; overflow:auto; }
@@ -21,16 +21,12 @@
   .asset:hover { background:#5f5f5f; }
   .objItem.active { background:#c8b56a; color:#000; }
 
-  button, input[type=file], select, input[type=range], label {
+  button, input[type=file] {
     width:100%; padding:8px; margin-top:8px;
     border:0; background:#5a5a5a; color:#fff; border-radius:6px; cursor:pointer;
-    box-sizing:border-box;
   }
-  button:hover, input[type=file]:hover, select:hover { background:#777; }
-  input[type=range] { cursor:pointer; -webkit-appearance:none; height:8px; }
-  .small { font-size:12px; color:#ccc; margin-top:6px; }
-  .row { display:flex; gap:8px; }
-  .row > * { width:100%; }
+  button:hover, input[type=file]:hover { background:#777; }
+  .info { font-size:12px; color:#ccc; margin-top:8px; }
 </style>
 </head>
 <body>
@@ -44,27 +40,6 @@
     <button id="savePngBtn">Сохранить карту (PNG)</button>
     <button id="saveJsonBtn">Сохранить проект (JSON)</button>
     <input id="loadJson" type="file" accept="application/json">
-    
-    <h3 style="margin-top:12px;">Генератор случайных объектов</h3>
-    <label>Тип генерации:</label>
-    <select id="genType">
-      <option value="forest">Лес (деревья / кусты)</option>
-      <option value="village">Деревня (дома)</option>
-      <option value="road">Дорога (каменная)</option>
-    </select>
-    <label>Плотность / количество:</label>
-    <input id="genCount" type="range" min="1" max="300" value="50">
-    <div class="small">Кол-во / плотность: <span id="genCountVal">50</span></div>
-    <label>Область генерации:</label>
-    <select id="genArea">
-      <option value="viewport">Текущая видимая область (viewport)</option>
-      <option value="full">Вся сцена (stage)</option>
-    </select>
-    <div class="row">
-      <button id="generateBtn">Сгенерировать</button>
-      <button id="clearGeneratedBtn">Удалить сгенерированные</button>
-    </div>
-    <div class="small">Подсказка: для дороги задавайте небольшую плотность (10–60), она будет съедать количество плиток между двумя точками.</div>
   </div>
 
   <!-- Центральное поле -->
@@ -83,16 +58,18 @@
     <h3 style="margin-top:14px;">Фон</h3>
     <input id="bgFile" type="file" accept="image/*">
 
-    <div class="small" style="margin-top:10px;">
-      • Добавляйте ассеты слева или загружайте свои (они будут сохранены как data-URL в проекте).<br>
-      • Генератор добавляет объекты и помечает их как «generated» (можно удалить отдельно).
+    <div class="info">
+      • ЛКМ по пустому — перетаскивание карты<br>
+      • Колёсико — масштаб сцены или объекта<br>
+      • Клик по объекту — выделение/снятие<br>
+      • Углы — изменение размера, кружок сверху — поворот
     </div>
   </div>
 
 </div>
 
 <script>
-/* ---------- Ассеты (поменяйте пути на свои, если нужно) ---------- */
+/* ---------- Ассеты ---------- */
 const assets = [
   {name:'Деревянный дом', url:'assets/wood_house.png'},
   {name:'Каменный дом',   url:'assets/stone_house.png'},
@@ -106,60 +83,55 @@ const assets = [
   {name:'Сундук',            url:'assets/dungeon_chest.png'},
   {name:'Факел',             url:'assets/dungeon_torch.png'},
   {name:'Руины',             url:'assets/dungeon_rocks.png'},
-  {name:'Каменная тропинка', url:'assets/stone_path.png'},
-  {name:'Земляная тропинка', url:'assets/earth_path.png'}
+  {name:'Каменная тропинка',  url:'assets/stone_path.png'},
+  {name:'Земляная тропинка',  url:'assets/earth_path.png'}
 ];
 
 /* ---------- Сцена ---------- */
 const stage = new Konva.Stage({
   container: 'container',
-  width: window.innerWidth - (240 + 260),
+  width: window.innerWidth - (200 + 240),
   height: window.innerHeight
 });
 const backgroundLayer = new Konva.Layer();
 const gridLayer = new Konva.Layer();
-const pathLayer = new Konva.Layer();   // оставляем на будущее (не используется сейчас)
 const objectLayer = new Konva.Layer();
 stage.add(backgroundLayer);
 stage.add(gridLayer);
-stage.add(pathLayer);
 stage.add(objectLayer);
 
 /* Сетка */
 function drawGrid(cell=48){
   gridLayer.destroyChildren();
   const w=stage.width(), h=stage.height();
-  for(let i=0;i<=Math.ceil(w/cell);i++){
+  for(let i=0;i<=w/cell;i++){
     gridLayer.add(new Konva.Line({
       points:[i*cell,0,i*cell,h],
-      stroke:'rgba(255,255,255,0.20)', strokeWidth:1
+      stroke:'rgba(255,255,255,0.25)', strokeWidth:1
     }));
   }
-  for(let j=0;j<=Math.ceil(h/cell);j++){
+  for(let j=0;j<=h/cell;j++){
     gridLayer.add(new Konva.Line({
       points:[0,j*cell,w,j*cell],
-      stroke:'rgba(255,255,255,0.20)', strokeWidth:1
+      stroke:'rgba(255,255,255,0.25)', strokeWidth:1
     }));
   }
   gridLayer.batchDraw();
 }
 drawGrid();
 
-/* UI ассетов (левый столбец) */
-const assetList = document.getElementById('assetList');
+/* UI ассетов */
+const assetList=document.getElementById('assetList');
 assets.forEach(a=>{
   const d=document.createElement('div');
   d.className='asset';
-  d.innerHTML=`<strong>${a.name}</strong><img class="thumb" src="${a.url}" alt="${a.name}">`;
+  d.innerHTML=`<strong>${a.name}</strong><img class="thumb" src="${a.url}">`;
   d.onclick=()=>addAsset(a.url,a.name);
   assetList.appendChild(d);
 });
 
-/* ---------- Объекты / трансформер ---------- */
-let objectsData = []; // {id,name,url,node,generated?}
-let selectedId = null;
-let idCounter = 1;
-
+/* Объекты */
+let objectsData=[], selectedId=null, idCounter=1;
 const transformer = new Konva.Transformer({
   rotateEnabled:true,
   enabledAnchors:[
@@ -167,184 +139,170 @@ const transformer = new Konva.Transformer({
     'middle-right','bottom-right','bottom-center',
     'bottom-left','middle-left'
   ],
-  boundBoxFunc:(oldBox,newBox)=> (newBox.width<8 || newBox.height<8) ? oldBox : newBox
+  boundBoxFunc:(oldBox,newBox)=>{
+    if(newBox.width<16||newBox.height<16) return oldBox;
+    return newBox;
+  }
 });
 objectLayer.add(transformer);
 
-function addAsset(url,name,x=null,y=null,extra={}){
-  Konva.Image.fromURL(url, img => {
-    const w = img.width() || 64, h = img.height() || 64;
-    const id = 'obj_'+(Date.now())+'_'+(idCounter++);
-    // default placement centered
-    const attrs = {
+function addAsset(url,name,x=null,y=null,extra={}) {
+  Konva.Image.fromURL(url,img=>{
+    const w=img.width()||64, h=img.height()||64;
+    const id='obj_'+Date.now()+'_'+(idCounter++);
+    img.setAttrs({
       x: x ?? stage.width()/2 - w/4,
       y: y ?? stage.height()/2 - h/4,
-      width: extra.width ?? (w/2),
-      height: extra.height ?? (h/2),
+      width: w/2,
+      height: h/2,
       draggable: true,
       id,
       ...extra
-    };
-    img.setAttrs(attrs);
-    img.on('click', e => { e.cancelBubble = true; toggleSelect(id); });
-    img.on('dragend transformend', refreshObjectList);
+    });
+    img.on('click',e=>{ e.cancelBubble=true; toggleSelect(id); });
+    img.on('dragend transformend',refreshObjectList);
     objectLayer.add(img);
-
-    // store metadata (include generated flag if any)
-    objectsData.push({ id, name, url, node: img, generated: !!extra.generated });
+    objectsData.push({id,name,url,node:img});
     selectObject(id);
     refreshObjectList();
   });
 }
 
-const objectsDiv = document.getElementById('objects');
+const objectsDiv=document.getElementById('objects');
 function refreshObjectList(){
-  objectsDiv.innerHTML = '';
+  objectsDiv.innerHTML='';
   objectsData.forEach(o=>{
-    const div = document.createElement('div');
-    div.className = 'objItem' + (o.id===selectedId ? ' active' : '');
-    div.textContent = o.name + (o.generated ? ' (gen)' : '');
-    div.onclick = () => toggleSelect(o.id);
+    const div=document.createElement('div');
+    div.className='objItem'+(o.id===selectedId?' active':'');
+    div.textContent=o.name;
+    div.onclick=()=>toggleSelect(o.id);
     objectsDiv.appendChild(div);
   });
 }
+
 function selectObject(id){
-  selectedId = id;
-  const entry = objectsData.find(o=>o.id===id);
-  if(entry) transformer.nodes([entry.node]);
+  selectedId=id;
+  transformer.nodes([objectsData.find(o=>o.id===id).node]);
   objectLayer.batchDraw();
   refreshObjectList();
 }
 function toggleSelect(id){ selectedId===id ? deselect() : selectObject(id); }
 function deselect(){ selectedId=null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList(); }
+stage.on('mousedown',e=>{ if(e.target===stage||e.target===backgroundLayer||e.target===gridLayer) deselect(); });
 
-stage.on('mousedown', e => {
-  // click on empty space -> deselect (but not when clicking background images)
-  if (e.target === stage || e.target === backgroundLayer || e.target === gridLayer) deselect();
-});
-
-/* ---------- Базовые кнопки управления ---------- */
 /* Удаление */
-document.getElementById('deleteBtn').onclick = () => {
+document.getElementById('deleteBtn').onclick=()=>{
   if(!selectedId) return;
-  const idx = objectsData.findIndex(o=>o.id===selectedId);
-  if(idx>=0){ objectsData[idx].node.destroy(); objectsData.splice(idx,1); deselect(); refreshObjectList(); }
+  const i=objectsData.findIndex(o=>o.id===selectedId);
+  if(i>=0){ objectsData[i].node.destroy(); objectsData.splice(i,1); deselect(); refreshObjectList(); }
 };
-/* Копирование (с сохранением size/rotation/scale) */
-document.getElementById('copyBtn').onclick = () => {
+
+/* Копирование */
+document.getElementById('copyBtn').onclick=()=>{
   if(!selectedId) return;
-  const obj = objectsData.find(o=>o.id===selectedId);
+  const obj=objectsData.find(o=>o.id===selectedId);
   if(!obj) return;
-  const n = obj.node;
-  const pos = stage.getPointerPosition() || {x: n.x()+20, y: n.y()+20};
+  const n=obj.node;
+  const pos=stage.getPointerPosition() || {x:n.x()+20,y:n.y()+20};
   addAsset(obj.url, obj.name+' (копия)', pos.x, pos.y, {
     width: n.width(),
     height: n.height(),
     scaleX: n.scaleX(),
     scaleY: n.scaleY(),
-    rotation: n.rotation(),
-    generated: false
+    rotation: n.rotation()
   });
 };
+
 /* Зеркалирование */
-document.getElementById('mirrorBtn').onclick = () => {
+document.getElementById('mirrorBtn').onclick=()=>{
   if(!selectedId) return;
-  const obj = objectsData.find(o=>o.id===selectedId);
+  const obj=objectsData.find(o=>o.id===selectedId);
   if(!obj) return;
-  obj.node.scaleX(obj.node.scaleX() * -1);
+  obj.node.scaleX(obj.node.scaleX()*-1);
   objectLayer.batchDraw();
 };
-/* Слои: вверх/вниз */
-document.getElementById('layerUpBtn').onclick = () => {
+
+/* --- Слои --- */
+document.getElementById('layerUpBtn').onclick=()=>{
   if(!selectedId) return;
-  const obj = objectsData.find(o=>o.id===selectedId);
-  if(!obj) return;
+  const obj=objectsData.find(o=>o.id===selectedId);
   obj.node.moveUp();
   objectLayer.batchDraw();
 };
-document.getElementById('layerDownBtn').onclick = () => {
+document.getElementById('layerDownBtn').onclick=()=>{
   if(!selectedId) return;
-  const obj = objectsData.find(o=>o.id===selectedId);
-  if(!obj) return;
+  const obj=objectsData.find(o=>o.id===selectedId);
   obj.node.moveDown();
   objectLayer.batchDraw();
 };
 
-/* ---------- Масштаб сцены / объектов ---------- */
-stage.on('wheel', e => {
+/* Масштабирование */
+stage.on('wheel',e=>{
   e.evt.preventDefault();
-  const ptr = stage.getPointerPosition();
+  const ptr=stage.getPointerPosition();
   if(selectedId){
-    const t = objectsData.find(o=>o.id===selectedId);
-    if(t && stage.getIntersection(ptr) === t.node){
-      const k = e.evt.deltaY > 0 ? 0.9 : 1.1;
-      const s = t.node.scaleX() * k;
-      if(s > 0.1 && s < 10){ t.node.scale({ x: s, y: s }); objectLayer.batchDraw(); }
+    const t=objectsData.find(o=>o.id===selectedId);
+    if(t && stage.getIntersection(ptr)===t.node){
+      const k=e.evt.deltaY>0?0.9:1.1;
+      const s=t.node.scaleX()*k;
+      if(s>0.1 && s<10){ t.node.scale({x:s,y:s}); objectLayer.batchDraw(); }
       return;
     }
   }
-  // stage zoom
-  const scaleBy = 1.1;
-  const old = stage.scaleX();
-  const mp = { x: (ptr.x - stage.x()) / old, y: (ptr.y - stage.y()) / old };
-  const dir = e.evt.deltaY > 0 ? -1 : 1;
-  const newS = dir > 0 ? old * scaleBy : old / scaleBy;
-  stage.scale({ x:newS, y:newS });
-  stage.position({ x: ptr.x - mp.x * newS, y: ptr.y - mp.y * newS });
+  const scaleBy=1.1;
+  const old=stage.scaleX();
+  const mp={x:(ptr.x-stage.x())/old,y:(ptr.y-stage.y())/old};
+  const dir=e.evt.deltaY>0?-1:1;
+  const newS=dir>0?old*scaleBy:old/scaleBy;
+  stage.scale({x:newS,y:newS});
+  stage.position({x:ptr.x-mp.x*newS,y:ptr.y-mp.y*newS});
   stage.batchDraw();
 });
 
-/* ---------- Панорамирование сцены ---------- */
-let isPanning=false, lastPos=null;
-const cont = document.getElementById('container');
-cont.addEventListener('mousedown', e => {
-  const target = stage.getIntersection(stage.getPointerPosition());
+/* Панорамирование сцены */
+let isPanning=false,lastPos=null;
+const cont=document.getElementById('container');
+cont.addEventListener('mousedown',e=>{
+  const target=stage.getIntersection(stage.getPointerPosition());
   if(!target){
-    isPanning = true;
-    cont.style.cursor = 'grabbing';
-    lastPos = { x: e.clientX, y: e.clientY };
+    isPanning=true;
+    cont.style.cursor='grabbing';
+    lastPos={x:e.clientX,y:e.clientY};
   }
 });
-cont.addEventListener('mousemove', e => {
+cont.addEventListener('mousemove',e=>{
   if(!isPanning) return;
-  const dx = e.clientX - lastPos.x, dy = e.clientY - lastPos.y;
-  lastPos = { x: e.clientX, y: e.clientY };
-  stage.position({ x: stage.x() + dx, y: stage.y() + dy });
+  const dx=e.clientX-lastPos.x, dy=e.clientY-lastPos.y;
+  lastPos={x:e.clientX,y:e.clientY};
+  stage.position({x:stage.x()+dx, y:stage.y()+dy});
   stage.batchDraw();
 });
-cont.addEventListener('mouseup', () => { isPanning = false; cont.style.cursor = 'grab'; });
-cont.addEventListener('mouseleave', () => { isPanning = false; cont.style.cursor = 'grab'; });
+cont.addEventListener('mouseup',()=>{isPanning=false; cont.style.cursor='grab';});
+cont.addEventListener('mouseleave',()=>{isPanning=false; cont.style.cursor='grab';});
 
-/* ---------- Файлы (загрузка ассета, фон, экспорт) ---------- */
-/* Загрузка собственных ассетов (dataURL) */
-document.getElementById('fileInput').onchange = e => {
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    // добавим в панель ассетов и сразу поместим на карту при клике
-    const url = ev.target.result;
-    const name = f.name;
-    assets.push({ name, url });
-    const d=document.createElement('div');
-    d.className='asset';
-    d.innerHTML=`<strong>${name}</strong><img class="thumb" src="${url}">`;
-    d.onclick=()=>addAsset(url,name);
-    assetList.appendChild(d);
-  };
+/* Загрузка своих ассетов */
+document.getElementById('fileInput').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>addAsset(ev.target.result,f.name);
   r.readAsDataURL(f);
   e.target.value='';
 };
 
-/* Сохранение как PNG */
-document.getElementById('savePngBtn').onclick = () => {
-  const uri = stage.toDataURL({ pixelRatio:2 });
-  const a = document.createElement('a'); a.href = uri; a.download = 'dnd_map.png'; a.click();
+/* Сохранение карты как PNG */
+document.getElementById('savePngBtn').onclick=()=>{
+  const uri=stage.toDataURL({pixelRatio:2});
+  const a=document.createElement('a'); a.href=uri; a.download='dnd_map.png'; a.click();
 };
 
-/* Сохранение/загрузка проекта JSON */
-document.getElementById('saveJsonBtn').onclick = () => {
+/* --- Сохранение/загрузка проекта (JSON) --- */
+document.getElementById('saveJsonBtn').onclick=()=>{
   const data = {
-    stage: { x: stage.x(), y: stage.y(), scale: stage.scaleX() },
+    stage: {
+      x: stage.x(),
+      y: stage.y(),
+      scale: stage.scaleX()
+    },
     objects: objectsData.map(o=>({
       name: o.name,
       url: o.url,
@@ -355,47 +313,51 @@ document.getElementById('saveJsonBtn').onclick = () => {
       scaleX: o.node.scaleX(),
       scaleY: o.node.scaleY(),
       rotation: o.node.rotation(),
-      generated: !!o.generated,
       zIndex: o.node.zIndex()
     }))
   };
-  const blob = new Blob([JSON.stringify(data)], { type:'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dnd_project.json'; a.click();
+  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='dnd_project.json';
+  a.click();
 };
 
-document.getElementById('loadJson').onchange = e => {
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ev => {
+document.getElementById('loadJson').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
     const data = JSON.parse(ev.target.result);
-    // clear existing objects
+    // очистка
     objectsData.forEach(o=>o.node.destroy());
-    objectsData = [];
+    objectsData=[];
     deselect();
-    // restore stage transform
-    stage.position({ x: data.stage.x, y: data.stage.y });
-    stage.scale({ x: data.stage.scale, y: data.stage.scale });
-    // restore objects sorted by zIndex
-    data.objects.sort((a,b)=>a.zIndex - b.zIndex).forEach(o=>{
-      addAsset(o.url, o.name, o.x, o.y, {
-        width: o.width, height: o.height, scaleX: o.scaleX, scaleY: o.scaleY,
-        rotation: o.rotation, generated: o.generated
+    // восстановление объектов
+    data.objects.sort((a,b)=>a.zIndex-b.zIndex).forEach(obj=>{
+      addAsset(obj.url, obj.name, obj.x, obj.y, {
+        width: obj.width,
+        height: obj.height,
+        scaleX: obj.scaleX,
+        scaleY: obj.scaleY,
+        rotation: obj.rotation
       });
     });
+    stage.position({x:data.stage.x, y:data.stage.y});
+    stage.scale({x:data.stage.scale, y:data.stage.scale});
     stage.batchDraw();
   };
   r.readAsText(f);
   e.target.value='';
 };
 
-/* ---------- Загрузка пользовательского фона ---------- */
-document.getElementById('bgFile').onchange = e => {
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ev => {
+/* Загрузка пользовательского фона */
+document.getElementById('bgFile').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
     backgroundLayer.destroyChildren();
     Konva.Image.fromURL(ev.target.result, img=>{
-      img.setAttrs({ x:0, y:0, width: stage.width(), height: stage.height(), listening:false });
+      img.setAttrs({x:0,y:0,width:stage.width(),height:stage.height(),listening:false});
       backgroundLayer.add(img);
       backgroundLayer.batchDraw();
       gridLayer.moveToTop();
@@ -406,137 +368,9 @@ document.getElementById('bgFile').onchange = e => {
   e.target.value='';
 };
 
-/* ---------- Генератор случайных объектов ---------- */
-const genType = document.getElementById('genType');
-const genCount = document.getElementById('genCount');
-const genCountVal = document.getElementById('genCountVal');
-const genArea = document.getElementById('genArea');
-const generateBtn = document.getElementById('generateBtn');
-const clearGeneratedBtn = document.getElementById('clearGeneratedBtn');
-
-genCount.oninput = () => genCountVal.textContent = genCount.value;
-
-// helper: get random number in range
-function rand(min, max){ return Math.random() * (max - min) + min; }
-function randInt(min,max){ return Math.floor(rand(min,max+1)); }
-
-// get spawn rect depending on area selection
-function getSpawnRect(){
-  if(genArea.value === 'viewport'){
-    // viewport: visible rectangle in stage coordinates
-    const s = stage.scaleX();
-    const x = -stage.x() / s;
-    const y = -stage.y() / s;
-    const w = stage.width() / s;
-    const h = stage.height() / s;
-    return { x, y, w, h };
-  } else {
-    // full stage - use entire stage size (0..stage.width, 0..stage.height)
-    return { x: 0, y: 0, w: stage.width(), h: stage.height() };
-  }
-}
-
-// asset collections for generation
-const forestAssets = ['assets/forest.png','assets/clearing.png','assets/dungeon_rocks.png'];
-const villageAssets = ['assets/wood_house.png','assets/stone_house.png','assets/tavern.png','assets/guild.png','assets/castle.png'];
-const roadTile = 'assets/stone_path.png';
-
-// addGenerated wrapper: mark generated=true in metadata
-function addGenerated(url, name, x, y, extra={}){
-  extra.generated = true;
-  addAsset(url, name, x, y, extra);
-}
-
-// generate forest: scattered 'tree' assets
-function generateForest(count, rect){
-  for(let i=0;i<count;i++){
-    const x = rand(rect.x, rect.x + rect.w);
-    const y = rand(rect.y, rect.y + rect.h);
-    const url = forestAssets[randInt(0, forestAssets.length-1)];
-    const scale = rand(0.5, 1.2);
-    addGenerated(url, 'Tree', x, y, { width: null, height: null, scaleX: scale, scaleY: scale });
-  }
-}
-
-// generate village: cluster of buildings (spread around cluster centers)
-function generateVillage(count, rect){
-  // create a few village centers, then scatter buildings around
-  const centers = Math.max(1, Math.floor(count / 8));
-  const perCenter = Math.max(1, Math.floor(count / centers));
-  for(let c=0;c<centers;c++){
-    const cx = rand(rect.x + rect.w*0.1, rect.x + rect.w*0.9);
-    const cy = rand(rect.y + rect.h*0.1, rect.y + rect.h*0.9);
-    const radius = Math.min(rect.w, rect.h) * 0.08 + rand(20, 120);
-    for(let i=0;i<perCenter && (c*perCenter + i) < count; i++){
-      const angle = rand(0, Math.PI*2);
-      const r = Math.abs(rand(0, radius));
-      const x = cx + Math.cos(angle) * r;
-      const y = cy + Math.sin(angle) * r;
-      const url = villageAssets[randInt(0, villageAssets.length-1)];
-      const scale = rand(0.6, 1.2);
-      const rot = randInt(0,360);
-      addGenerated(url, 'Building', x, y, { width: null, height: null, scaleX: scale, scaleY: scale, rotation: rot });
-    }
-  }
-}
-
-// generate road: straight road between two random points, repeat tile along line
-function generateRoad(count, rect){
-  // count will be treated as approximate number of tiles (density)
-  const start = { x: rand(rect.x, rect.x + rect.w), y: rand(rect.y, rect.y + rect.h) };
-  const end   = { x: rand(rect.x, rect.x + rect.w), y: rand(rect.y, rect.y + rect.h) };
-  const dx = end.x - start.x, dy = end.y - start.y;
-  const dist = Math.hypot(dx, dy);
-  if(dist < 4) return;
-  // tile size (we'll try to approximate tile width from image width/desired scale)
-  const tileBase = 64; // fallback tile size in px
-  // approximate number of tiles from count (user control) scaled by distance
-  const tiles = Math.max(2, Math.floor(count));
-  // actual step
-  const step = dist / tiles;
-  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-  for(let i=0;i<=tiles;i++){
-    const t = i / tiles;
-    const x = start.x + dx * t;
-    const y = start.y + dy * t;
-    // place a tile; scale can be 0.6..1.0 depending on step
-    const scale = Math.max(0.4, Math.min(1.4, step / tileBase));
-    addGenerated(roadTile, 'RoadTile', x, y, { width: tileBase * scale, height: tileBase * scale, rotation: angle });
-  }
-}
-
-// generate dispatcher
-generateBtn.addEventListener('click', () => {
-  const type = genType.value;
-  const count = parseInt(genCount.value, 10);
-  const rect = getSpawnRect();
-  if(type === 'forest'){
-    generateForest(count, rect);
-  } else if(type === 'village'){
-    generateVillage(count, rect);
-  } else if(type === 'road'){
-    // for road we treat count as number of tiles
-    generateRoad(count, rect);
-  }
-});
-
-// remove only generated objects
-clearGeneratedBtn.addEventListener('click', () => {
-  const remaining = [];
-  objectsData.forEach(o=>{
-    if(o.generated){
-      o.node.destroy();
-    } else remaining.push(o);
-  });
-  objectsData = remaining;
-  deselect();
-  refreshObjectList();
-  objectLayer.batchDraw();
-});
-
-/* ---------- Ресайз окна ---------- */
+/* Ресайз окна */
 window.addEventListener('resize',()=>{
-  stage.width(window.innerWidth - (240 + 260));
+  stage.width(window.innerWidth - (200 + 240));
   stage.height(window.innerHeight);
   backgroundLayer.getChildren().forEach(img=>{
     img.width(stage.width());
@@ -548,4 +382,3 @@ window.addEventListener('resize',()=>{
 </script>
 </body>
 </html>
-
