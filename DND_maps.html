@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.7.3</title>
+<title>D&D Map Maker — 0.7.4</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
   :root { --left:200px; --right:320px; }
@@ -43,13 +43,18 @@
   }
   .charRow input[type=number] { width:72px; max-width:72px; }
   .charRow input[type=text] { flex:1 1 120px; max-width:150px; }
-  .charBtns { display:flex; gap:6px; margin-top:8px; }
-  .charBtns button { flex:1; padding:6px; }
+  .charBtns { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .charBtns button { flex:1 1 48%; padding:6px; box-sizing:border-box; }
 
   /* кубики */
   .diceBtns { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
   .diceBtns button { flex:1 1 48px; padding:6px; }
   #diceResult { margin-top:6px; font-weight:bold; text-align:center; }
+
+  /* small responsive tweak */
+  @media (max-width:900px){
+    :root { --right:260px; }
+  }
 
   /* token visual tweaks ensure on top */
   canvas { image-rendering: optimizeSpeed; }
@@ -139,7 +144,7 @@ const stage = new Konva.Stage({
 const backgroundLayer = new Konva.Layer();
 const gridLayer = new Konva.Layer();
 const objectLayer = new Konva.Layer();
-const tokenLayer = new Konva.Layer();
+const tokenLayer = new Konva.Layer(); // tokens above objects
 stage.add(backgroundLayer);
 stage.add(gridLayer);
 stage.add(objectLayer);
@@ -226,31 +231,9 @@ function deselect(){ selectedId = null; transformer.nodes([]); objectLayer.batch
 stage.on('mousedown', e => { if(e.target===stage || e.target === backgroundLayer || e.target === gridLayer) deselect(); });
 
 /* Удаление / копирование / зеркало / слои */
-document.getElementById('deleteBtn').onclick = ()=>{
-  if(!selectedId) return;
-  const i = objectsData.findIndex(o=>o.id===selectedId);
-  if(i>=0){ objectsData[i].node.destroy(); objectsData.splice(i,1); deselect(); refreshObjectList(); }
-};
-document.getElementById('copyBtn').onclick = ()=>{
-  if(!selectedId) return;
-  const obj = objectsData.find(o=>o.id===selectedId);
-  if(!obj) return;
-  const n = obj.node;
-  const pos = stage.getPointerPosition() || {x:n.x()+20,y:n.y()+20};
-  addAsset(obj.url, obj.name+' (копия)', pos.x, pos.y, {
-    width: n.width(),
-    height: n.height(),
-    scaleX: n.scaleX(),
-    scaleY: n.scaleY(),
-    rotation: n.rotation()
-  });
-};
-document.getElementById('mirrorBtn').onclick = ()=>{
-  if(!selectedId) return;
-  const obj = objectsData.find(o=>o.id===selectedId);
-  obj.node.scaleX(obj.node.scaleX() * -1);
-  objectLayer.batchDraw();
-};
+document.getElementById('deleteBtn').onclick = ()=>{ if(!selectedId) return; const i = objectsData.findIndex(o=>o.id===selectedId); if(i>=0){ objectsData[i].node.destroy(); objectsData.splice(i,1); deselect(); refreshObjectList(); }};
+document.getElementById('copyBtn').onclick = ()=>{ if(!selectedId) return; const obj = objectsData.find(o=>o.id===selectedId); if(!obj) return; const n = obj.node; const pos = stage.getPointerPosition() || {x:n.x()+20,y:n.y()+20}; addAsset(obj.url, obj.name+' (копия)', pos.x, pos.y, { width: n.width(), height: n.height(), scaleX: n.scaleX(), scaleY: n.scaleY(), rotation: n.rotation() });};
+document.getElementById('mirrorBtn').onclick = ()=>{ if(!selectedId) return; const obj = objectsData.find(o=>o.id===selectedId); obj.node.scaleX(obj.node.scaleX() * -1); objectLayer.batchDraw(); };
 document.getElementById('layerUpBtn').onclick = ()=>{ if(!selectedId) return; objectsData.find(o=>o.id===selectedId).node.moveUp(); objectLayer.batchDraw(); };
 document.getElementById('layerDownBtn').onclick = ()=>{ if(!selectedId) return; objectsData.find(o=>o.id===selectedId).node.moveDown(); objectLayer.batchDraw(); };
 
@@ -281,7 +264,9 @@ stage.on('wheel', e=>{
 let isPanning=false, lastPos=null;
 const cont = document.getElementById('container');
 cont.addEventListener('mousedown', e=>{
-  const target = stage.getIntersection(stage.getPointerPosition());
+  // start panning only when clicking empty space (not on object/token)
+  const pointer = stage.getPointerPosition();
+  const target = stage.getIntersection(pointer);
   if(!target){
     isPanning=true; cont.style.cursor='grabbing'; lastPos={x:e.clientX,y:e.clientY};
   }
@@ -311,94 +296,13 @@ document.getElementById('savePngBtn').onclick = ()=>{
   const a = document.createElement('a'); a.href = uri; a.download = 'dnd_map.png'; a.click();
 };
 
-/* Сохранение/загрузка JSON (включаем персонажей) */
-function exportProject(){
-  return {
-    stage: { x: stage.x(), y: stage.y(), scale: stage.scaleX() },
-    objects: objectsData.map(o=>({
-      name: o.name, url: o.url,
-      x: o.node.x(), y: o.node.y(),
-      width: o.node.width(), height: o.node.height(),
-      scaleX: o.node.scaleX(), scaleY: o.node.scaleY(),
-      rotation: o.node.rotation(), zIndex: o.node.zIndex()
-    })),
-    characters: characters.map(ch=>({
-      name: ch.name, hp: ch.hp, maxHp: ch.maxHp, cd: ch.cd, speed: ch.speed,
-      url: ch.url, x: ch.x, y: ch.y, size: ch.size
-    }))
-  };
-}
-
-document.getElementById('saveJsonBtn').onclick = ()=>{
-  const blob = new Blob([JSON.stringify(exportProject())], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dnd_project.json'; a.click();
-};
-
-document.getElementById('loadJson').onchange = e=>{
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ev=>{
-    const data = JSON.parse(ev.target.result);
-    // clear objects
-    objectsData.forEach(o=>o.node.destroy());
-    objectsData = [];
-    deselect();
-    (data.objects||[]).sort((a,b)=>a.zIndex-b.zIndex).forEach(o=>{
-      addAsset(o.url, o.name, o.x, o.y, {
-        width: o.width, height: o.height, scaleX: o.scaleX, scaleY: o.scaleY, rotation: o.rotation
-      });
-    });
-    // restore stage transform
-    if(data.stage){
-      stage.position({x: data.stage.x||0, y: data.stage.y||0});
-      const s = data.stage.scale || 1; stage.scale({x:s,y:s});
-    }
-    // restore characters
-    // remove previous token nodes
-    characters.forEach(ch=>{ if(ch._group) ch._group.destroy(); });
-    characters = [];
-    (data.characters||[]).forEach((chData)=>{
-      const ch = {
-        name: chData.name || 'Char', hp: chData.hp ?? 10, maxHp: chData.maxHp ?? (chData.hp ?? 10),
-        cd: chData.cd ?? 0, speed: chData.speed ?? 30,
-        url: chData.url || null, x: chData.x, y: chData.y, size: chData.size || 64
-      };
-      characters.push(ch);
-    });
-    characters.forEach((ch, idx)=> createTokenNode(ch, idx));
-    refreshCharacters();
-    stage.batchDraw();
-  };
-  r.readAsText(f);
-  e.target.value='';
-};
-
-/* Загрузка фонового изображения */
-document.getElementById('bgFile').onchange = e=>{
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ev=>{
-    backgroundLayer.destroyChildren();
-    Konva.Image.fromURL(ev.target.result, img=>{
-      img.setAttrs({ x:0, y:0, width: stage.width(), height: stage.height(), listening:false });
-      backgroundLayer.add(img);
-      backgroundLayer.batchDraw();
-      gridLayer.moveToTop();
-    });
-  };
-  r.readAsDataURL(f);
-  e.target.value='';
-};
-
 /* ---------- Персонажи / токены ---------- */
-let characters = []; // array of characters (data objects)
+let characters = []; // each: { name, hp, maxHp, cd, speed, url, x, y, size, _group,... }
 let selectedCharacterIndex = null;
 const charDiv = document.getElementById('characters');
 const charImageInput = document.getElementById('charImageInput');
 
-// create visual token for character ch at index i
 function createTokenNode(ch, i){
-  // destroy existing
   if(ch._group && ch._group.destroy) ch._group.destroy();
 
   const size = ch.size || 64;
@@ -417,11 +321,13 @@ function createTokenNode(ch, i){
   // avatar image area (inset)
   const avatar = new Konva.Image({ x:4, y:4, width: size-8, height: size-8, listening: false });
 
-  // HP bar background + fill
-  const hpBg = new Konva.Rect({ x:0, y:size + 6, width: size, height: 8, fill:'#222', cornerRadius:2, listening:false });
-  const hpFill = new Konva.Rect({ x:0, y:size + 6, width: Math.max(1, size * ((ch.hp||0) / (ch.maxHp||ch.hp||1))), height:8, fill:'#e33', cornerRadius:2, listening:false });
+  // HP text under avatar
+  const hpText = new Konva.Text({
+    x:0, y:size+4, width:size, align:'center',
+    text:`HP: ${ch.hp}`, fill:'#e33', fontSize:14, fontStyle:'bold', listening:false
+  });
 
-  group.add(border, avatar, hpBg, hpFill);
+  group.add(border, avatar, hpText);
   tokenLayer.add(group);
   tokenLayer.moveToTop();
   tokenLayer.batchDraw();
@@ -432,7 +338,7 @@ function createTokenNode(ch, i){
     img.onload = ()=> { avatar.image(img); tokenLayer.batchDraw(); };
     img.src = ch.url;
   } else {
-    // draw placeholder
+    // placeholder
     const canvas = document.createElement('canvas'); canvas.width = size-8; canvas.height = size-8;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#666'; ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -451,37 +357,30 @@ function createTokenNode(ch, i){
 
   group.on('click', e=>{
     e.cancelBubble = true;
-    selectCharacter(i);
+    selectedCharacterIndex = i;
+    updateCharacterHighlight();
+    refreshCharacters();
   });
 
   // store refs
   ch._group = group;
   ch._avatar = avatar;
   ch._border = border;
-  ch._hpFill = hpFill;
+  ch._hpText = hpText;
   ch._size = size;
-  // if was selected, update highlight
   updateCharacterHighlight();
 }
 
-// update hp bar and refresh UI
 function updateCharacterNode(i){
   const ch = characters[i];
   if(!ch) return;
   const size = ch._size || ch.size || 64;
   const maxHp = ch.maxHp || ch.hp || 1;
-  const w = Math.max(1, size * (ch.hp / maxHp));
-  if(ch._hpFill) ch._hpFill.width(w);
+  if(ch._hpText) ch._hpText.text(`HP: ${ch.hp}`);
   tokenLayer.batchDraw();
-  refreshCharacters();
+  refreshCharacters(); // ensure UI sync
 }
 
-// select character by index and highlight
-function selectCharacter(i){
-  selectedCharacterIndex = i;
-  updateCharacterHighlight();
-  refreshCharacters();
-}
 function updateCharacterHighlight(){
   characters.forEach((ch, idx)=>{
     if(ch._border){
@@ -492,7 +391,6 @@ function updateCharacterHighlight(){
   tokenLayer.batchDraw();
 }
 
-// UI: refresh right-panel list of characters
 function refreshCharacters(){
   charDiv.innerHTML = '';
   characters.forEach((ch, i)=>{
@@ -502,9 +400,9 @@ function refreshCharacters(){
       <div class="charRow">
         <img id="img_${i}" src="${ch.url||''}" alt="${escapeHtml(ch.name)}">
         <input id="name_${i}" type="text" value="${escapeHtml(ch.name)}">
-        <label>HP</label><input id="hp_${i}" type="number" value="${ch.hp}">
-        <label>КД</label><input id="cd_${i}" type="number" value="${ch.cd}">
-        <label>Скор</label><input id="sp_${i}" type="number" value="${ch.speed}">
+        <input id="hp_${i}" type="number" value="${ch.hp}" title="HP">
+        <input id="cd_${i}" type="number" value="${ch.cd}" title="КД">
+        <input id="sp_${i}" type="number" value="${ch.speed}" title="Скорость">
       </div>
       <div class="charBtns">
         <button id="btnImg_${i}">Сменить изображение</button>
@@ -555,14 +453,12 @@ function refreshCharacters(){
     });
 
     // clicking avatar in panel should also open change image
-    el.querySelector(`#img_${i}`).addEventListener('click', ()=>{
-      charImageInput.dataset.index = i; charImageInput.click();
-    });
+    el.querySelector(`#img_${i}`).addEventListener('click', ()=>{ charImageInput.dataset.index = i; charImageInput.click(); });
 
   });
 }
 
-// add new character (prompt for name, then create token and open file dialog)
+// add new character (prompts for name, creates token, opens file dialog)
 document.getElementById('addCharBtn').addEventListener('click', ()=>{
   const name = prompt('Имя персонажа:', 'Герой');
   if(!name) return;
@@ -571,7 +467,7 @@ document.getElementById('addCharBtn').addEventListener('click', ()=>{
   const idx = characters.length - 1;
   createTokenNode(ch, idx);
   refreshCharacters();
-  // optional: open file dialog to upload avatar
+  // open file dialog to upload avatar
   charImageInput.dataset.index = idx;
   charImageInput.click();
 });
@@ -612,6 +508,88 @@ function healCharPrompt(i){
   updateCharacterNode(i);
 }
 
+/* ---------- Export / Import (JSON) ---------- */
+function exportProject(){
+  return {
+    stage: { x: stage.x(), y: stage.y(), scale: stage.scaleX() },
+    objects: objectsData.map(o=>({
+      name: o.name, url: o.url,
+      x: o.node.x(), y: o.node.y(),
+      width: o.node.width(), height: o.node.height(),
+      scaleX: o.node.scaleX(), scaleY: o.node.scaleY(),
+      rotation: o.node.rotation(), zIndex: o.node.zIndex()
+    })),
+    characters: characters.map(ch=>({
+      name: ch.name, hp: ch.hp, maxHp: ch.maxHp, cd: ch.cd, speed: ch.speed,
+      url: ch.url, x: ch.x, y: ch.y, size: ch.size
+    }))
+  };
+}
+
+document.getElementById('saveJsonBtn').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(exportProject())], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dnd_project.json'; a.click();
+};
+
+document.getElementById('loadJson').onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev=>{
+    try{
+      const data = JSON.parse(ev.target.result);
+      // clear objects
+      objectsData.forEach(o=>o.node.destroy());
+      objectsData = [];
+      deselect();
+      (data.objects||[]).sort((a,b)=>a.zIndex-b.zIndex).forEach(o=>{
+        addAsset(o.url, o.name, o.x, o.y, {
+          width: o.width, height: o.height, scaleX: o.scaleX, scaleY: o.scaleY, rotation: o.rotation
+        });
+      });
+      // restore stage transform
+      if(data.stage){
+        stage.position({x: data.stage.x||0, y: data.stage.y||0});
+        const s = data.stage.scale || 1; stage.scale({x:s,y:s});
+      }
+      // restore characters
+      characters.forEach(ch=>{ if(ch._group) ch._group.destroy(); });
+      characters = [];
+      (data.characters||[]).forEach((chData)=>{
+        const ch = {
+          name: chData.name || 'Char', hp: chData.hp ?? 10, maxHp: chData.maxHp ?? (chData.hp ?? 10),
+          cd: chData.cd ?? 0, speed: chData.speed ?? 30,
+          url: chData.url || null, x: chData.x, y: chData.y, size: chData.size || 64
+        };
+        characters.push(ch);
+      });
+      characters.forEach((ch, idx)=> createTokenNode(ch, idx));
+      refreshCharacters();
+      stage.batchDraw();
+    }catch(err){
+      alert('Ошибка при загрузке JSON: '+err.message);
+    }
+  };
+  r.readAsText(f);
+  e.target.value='';
+};
+
+/* ---------- Background image ---------- */
+document.getElementById('bgFile').onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev=>{
+    backgroundLayer.destroyChildren();
+    Konva.Image.fromURL(ev.target.result, img=>{
+      img.setAttrs({ x:0, y:0, width: stage.width(), height: stage.height(), listening:false });
+      backgroundLayer.add(img);
+      backgroundLayer.batchDraw();
+      gridLayer.moveToTop();
+    });
+  };
+  r.readAsDataURL(f);
+  e.target.value='';
+};
+
 /* ---------- Dice (кубики) ---------- */
 function roll(sides){
   const val = 1 + Math.floor(Math.random()*sides);
@@ -619,7 +597,7 @@ function roll(sides){
 }
 
 /* ---------- Resize ---------- */
-window.addEventListener('resize', ()=>{
+window.addEventListener('resize', ()=>{ 
   stage.width(window.innerWidth - (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--left')) + parseInt(getComputedStyle(document.documentElement).getPropertyValue('--right'))));
   stage.height(window.innerHeight);
   backgroundLayer.getChildren().forEach(img=>{ img.width(stage.width()); img.height(stage.height()); });
