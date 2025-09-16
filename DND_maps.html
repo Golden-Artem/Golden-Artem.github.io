@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<title>D&D Map Maker — 0.7.0</title>
+<meta charset="utf-8" />
+<title>D&D Map Maker — 0.7.1</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
-  :root { --left:200px; --right:260px; }
+  :root { --left:200px; --right:300px; }
   html,body { margin:0; height:100%; background:#222; color:#eee; font-family:Arial,sans-serif; }
   .layout { display:flex; height:100vh; }
   .panel { background:#333; padding:10px; box-sizing:border-box; overflow:auto; }
@@ -21,32 +21,37 @@
   .asset:hover { background:#5f5f5f; }
   .objItem.active { background:#c8b56a; color:#000; }
 
-  /* --- фиксим большие иконки ассетов --- */
+  /* миниатюры ассетов */
   .asset .thumb {
     display:block;
-    width:100%;           /* вписывается в блок */
-    max-height:80px;      /* ограничение по высоте */
+    width:100%;
+    max-height:70px;
     height:auto;
     margin-top:4px;
     object-fit:contain;
   }
 
-  button, input[type=file] {
+  button, input[type=file], select {
     width:100%; padding:8px; margin-top:8px;
     border:0; background:#5a5a5a; color:#fff; border-radius:6px; cursor:pointer;
   }
-  button:hover, input[type=file]:hover { background:#777; }
+  button:hover, input[type=file]:hover, select:hover { background:#777; }
 
   .info { font-size:12px; color:#ccc; margin-top:8px; }
 
   /* персонажи */
   .charItem {
-    background:#4b4b4b; border:1px solid #555;
-    padding:6px; margin-bottom:8px; border-radius:6px;
+    background:#3f3f3f; border:1px solid #555;
+    padding:8px; margin-bottom:8px; border-radius:6px;
   }
-  .charItem h4 { margin:0 0 4px; font-size:14px; }
-  .charItem input[type=number] { width:60px; }
-  .charBtns button { width:auto; margin-right:4px; margin-top:4px; }
+  .charItem.active { outline: 2px solid #9ad; }
+  .charRow { display:flex; gap:6px; align-items:center; margin-top:6px; }
+  .charRow input[type=number] { width:70px; padding:4px; border-radius:4px; border:0; background:#555; color:#fff; }
+  .charBtns { margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
+  .charBtns button { flex:1; padding:6px; }
+  .small { font-size:12px; color:#ccc; margin-top:6px; }
+  .muted { color:#bbb; font-size:12px; }
+  #charImageInput { display:none; }
 </style>
 </head>
 <body>
@@ -81,16 +86,19 @@
     <h3 style="margin-top:14px;">Экспериментальные функции</h3>
     <button id="addCharBtn">Добавить персонажа</button>
     <div id="characters"></div>
+    <div class="small">Добавляйте персонажей с аватаром — перетаскивайте их на сцене, кликайте по карточке для выделения, лечите/раните прямо отсюда.</div>
 
-    <div class="info">
+    <div class="info" style="margin-top:12px">
       • ЛКМ по пустому — перетаскивание карты<br>
       • Колёсико — масштаб сцены или объекта<br>
-      • Клик по объекту — выделение/снятие<br>
-      • Углы — изменение размера, кружок сверху — поворот
+      • Клик по объекту/токену — выделение/снятие
     </div>
   </div>
 
 </div>
+
+<!-- скрытый инпут для загрузки аватаров персонажей -->
+<input id="charImageInput" type="file" accept="image/*">
 
 <script>
 /* ---------- Ассеты ---------- */
@@ -114,30 +122,32 @@ const assets = [
 /* ---------- Сцена ---------- */
 const stage = new Konva.Stage({
   container: 'container',
-  width: window.innerWidth - (200 + 260),
+  width: window.innerWidth - (200 + 300),
   height: window.innerHeight
 });
 const backgroundLayer = new Konva.Layer();
 const gridLayer = new Konva.Layer();
 const objectLayer = new Konva.Layer();
+const tokenLayer = new Konva.Layer(); // слой для персонажей (токенов)
 stage.add(backgroundLayer);
 stage.add(gridLayer);
 stage.add(objectLayer);
+stage.add(tokenLayer);
 
 /* Сетка */
 function drawGrid(cell=48){
   gridLayer.destroyChildren();
   const w=stage.width(), h=stage.height();
-  for(let i=0;i<=w/cell;i++){
+  for(let i=0;i<=Math.ceil(w/cell);i++){
     gridLayer.add(new Konva.Line({
       points:[i*cell,0,i*cell,h],
-      stroke:'rgba(255,255,255,0.25)', strokeWidth:1
+      stroke:'rgba(255,255,255,0.20)', strokeWidth:1
     }));
   }
-  for(let j=0;j<=h/cell;j++){
+  for(let j=0;j<=Math.ceil(h/cell);j++){
     gridLayer.add(new Konva.Line({
       points:[0,j*cell,w,j*cell],
-      stroke:'rgba(255,255,255,0.25)', strokeWidth:1
+      stroke:'rgba(255,255,255,0.20)', strokeWidth:1
     }));
   }
   gridLayer.batchDraw();
@@ -145,16 +155,16 @@ function drawGrid(cell=48){
 drawGrid();
 
 /* UI ассетов */
-const assetList=document.getElementById('assetList');
+const assetList = document.getElementById('assetList');
 assets.forEach(a=>{
   const d=document.createElement('div');
   d.className='asset';
-  d.innerHTML=`<strong>${a.name}</strong><img class="thumb" src="${a.url}">`;
+  d.innerHTML=`<strong>${a.name}</strong><img class="thumb" src="${a.url}" alt="${a.name}">`;
   d.onclick=()=>addAsset(a.url,a.name);
   assetList.appendChild(d);
 });
 
-/* Объекты */
+/* ---------- Объекты (ваш предыдущий код) ---------- */
 let objectsData=[], selectedId=null, idCounter=1;
 const transformer = new Konva.Transformer({
   rotateEnabled:true,
@@ -174,8 +184,8 @@ function addAsset(url,name,x=null,y=null,extra={}) {
     img.setAttrs({
       x: x ?? stage.width()/2 - w/4,
       y: y ?? stage.height()/2 - h/4,
-      width: w/2,
-      height: h/2,
+      width: extra.width ?? w/2,
+      height: extra.height ?? h/2,
       draggable: true,
       id,
       ...extra
@@ -200,16 +210,15 @@ function refreshObjectList(){
     objectsDiv.appendChild(div);
   });
 }
-
 function selectObject(id){
   selectedId=id;
-  transformer.nodes([objectsData.find(o=>o.id===id).node]);
+  const entry = objectsData.find(o=>o.id===id);
+  if(entry) transformer.nodes([entry.node]);
   objectLayer.batchDraw();
   refreshObjectList();
 }
 function toggleSelect(id){ selectedId===id ? deselect() : selectObject(id); }
 function deselect(){ selectedId=null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList(); }
-stage.on('mousedown',e=>{ if(e.target===stage||e.target===backgroundLayer||e.target===gridLayer) deselect(); });
 
 /* Удаление/копия/зеркало/слои */
 document.getElementById('deleteBtn').onclick=()=>{
@@ -305,7 +314,241 @@ document.getElementById('savePngBtn').onclick=()=>{
   const a=document.createElement('a'); a.href=uri; a.download='dnd_map.png'; a.click();
 };
 
-/* Сохранение/загрузка проекта (JSON) */
+/* ---------- Персонажи (токены) ---------- */
+let characters = []; // each: { name, hp, maxHp, cd, speed, url, x, y, size, _nodes... }
+let selectedCharacterIndex = null;
+const charDiv = document.getElementById('characters');
+const charImageInput = document.getElementById('charImageInput');
+
+// helper to create visual token on tokenLayer for character i
+function createTokenNode(ch, i){
+  // remove previous if existed
+  if(ch._group && ch._group.destroy) ch._group.destroy();
+
+  const size = ch.size || 64;
+  const group = new Konva.Group({
+    x: (ch.x !== undefined ? ch.x : stage.width()/2 - size/2),
+    y: (ch.y !== undefined ? ch.y : stage.height()/2 - size/2),
+    draggable: true,
+    id: 'char_' + i
+  });
+
+  // border
+  const border = new Konva.Rect({
+    x: 0, y: 0, width: size, height: size,
+    stroke: (selectedCharacterIndex===i ? '#7df' : '#fff'),
+    strokeWidth: 3,
+    cornerRadius: 8
+  });
+
+  // avatar image (will be set once loaded)
+  const avatar = new Konva.Image({
+    x: 4, y: 4, width: size-8, height: size-8,
+    listening: false
+  });
+
+  // hp background and fill
+  const hpBg = new Konva.Rect({ x: 0, y: size + 6, width: size, height: 8, fill:'#333', cornerRadius:2, listening:false });
+  const hpFill = new Konva.Rect({ x: 0, y: size + 6, width: Math.max(1, size * ((ch.hp || 0) / (ch.maxHp || ch.hp || 1))), height:8, fill:'#e33', cornerRadius:2, listening:false });
+
+  group.add(border, avatar, hpBg, hpFill);
+  tokenLayer.add(group);
+  tokenLayer.draw();
+
+  // load avatar if exists
+  if(ch.url){
+    const img = new Image();
+    img.onload = ()=> { avatar.image(img); tokenLayer.batchDraw(); };
+    img.src = ch.url;
+  } else {
+    // draw placeholder: light gray rectangle into avatar via a small canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = size - 8; canvas.height = size - 8;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#666'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#999'; ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center'; ctx.fillText('avatar', canvas.width/2, canvas.height/2);
+    const img = new Image();
+    img.onload = ()=> { avatar.image(img); tokenLayer.batchDraw(); };
+    img.src = canvas.toDataURL();
+  }
+
+  // events
+  group.on('dragend', () => {
+    ch.x = Math.round(group.x());
+    ch.y = Math.round(group.y());
+    // sync UI if needed
+  });
+
+  group.on('click', e=>{
+    e.cancelBubble = true;
+    selectCharacter(i);
+  });
+
+  // store references
+  ch._group = group;
+  ch._avatar = avatar;
+  ch._border = border;
+  ch._hpFill = hpFill;
+  ch._size = size;
+}
+
+// refresh character list UI
+function refreshCharacters(){
+  charDiv.innerHTML='';
+  characters.forEach((ch,i)=>{
+    const d = document.createElement('div');
+    d.className='charItem'+(selectedCharacterIndex===i ? ' active' : '');
+    // fields
+    d.innerHTML = `
+      <strong>${escapeHtml(ch.name)}</strong>
+      <div class="charRow">
+        <label class="muted">HP</label>
+        <input type="number" min="0" value="${ch.hp}" id="hp_${i}">
+        <label class="muted">КД</label>
+        <input type="number" min="0" value="${ch.cd}" id="cd_${i}">
+        <label class="muted">Скорость</label>
+        <input type="number" min="0" value="${ch.speed}" id="sp_${i}">
+      </div>
+      <div class="charBtns">
+        <button id="btnChangeImg_${i}">Сменить изображение</button>
+        <button id="btnCenter_${i}">Центрировать</button>
+        <button id="btnDamage_${i}">− Урон</button>
+        <button id="btnHeal_${i}">+ Лечение</button>
+      </div>
+    `;
+    charDiv.appendChild(d);
+
+    // event listeners
+    d.querySelector(`#hp_${i}`).addEventListener('input', e=>{
+      const v = Number(e.target.value) || 0;
+      ch.hp = v;
+      if(!ch.maxHp) ch.maxHp = v;
+      updateCharacterNode(i);
+    });
+    d.querySelector(`#cd_${i}`).addEventListener('input', e=>{
+      ch.cd = Number(e.target.value) || 0;
+    });
+    d.querySelector(`#sp_${i}`).addEventListener('input', e=>{
+      ch.speed = Number(e.target.value) || 0;
+    });
+
+    d.querySelector(`#btnChangeImg_${i}`).addEventListener('click', ()=>{
+      charImageInput.dataset.index = i;
+      charImageInput.click();
+    });
+
+    d.querySelector(`#btnCenter_${i}`).addEventListener('click', ()=>{
+      if(characters[i]._group){
+        // center viewport on group
+        const g = characters[i]._group;
+        const gs = stage.scaleX();
+        const centerX = g.x()*gs + stage.x();
+        const centerY = g.y()*gs + stage.y();
+        // pan so that token is centered in viewport
+        stage.position({ x: stage.width()/2 - g.x()*gs, y: stage.height()/2 - g.y()*gs });
+        stage.batchDraw();
+      }
+    });
+
+    d.querySelector(`#btnDamage_${i}`).addEventListener('click', ()=> damageCharPrompt(i));
+    d.querySelector(`#btnHeal_${i}`).addEventListener('click', ()=> healCharPrompt(i));
+  });
+}
+
+// helper to update character node visuals (hp bar etc)
+function updateCharacterNode(i){
+  const ch = characters[i];
+  if(!ch) return;
+  if(ch._hpFill){
+    const size = ch._size || 64;
+    const maxHp = ch.maxHp || ch.hp || 1;
+    const w = Math.max(1, size * (ch.hp / maxHp));
+    ch._hpFill.width(w);
+    tokenLayer.batchDraw();
+  }
+  // also refresh panel to keep active class etc
+  refreshCharacters();
+}
+
+// selection of character (from token or panel)
+function selectCharacter(i){
+  selectedCharacterIndex = i;
+  // highlight border color for all characters
+  characters.forEach((ch, idx)=>{
+    if(ch._border){
+      ch._border.stroke(idx===i ? '#7df' : '#fff');
+    }
+  });
+  refreshCharacters();
+}
+
+// prompts
+function damageCharPrompt(i){
+  const val = Number(prompt('Нанести урон (HP):', '1')) || 0;
+  characters[i].hp = Math.max(0, (characters[i].hp || 0) - val);
+  updateCharacterNode(i);
+}
+function healCharPrompt(i){
+  const val = Number(prompt('Восстановить HP:', '1')) || 0;
+  characters[i].hp = (characters[i].hp || 0) + val;
+  updateCharacterNode(i);
+}
+
+// change image input handler (for both new chars and update)
+charImageInput.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  const idx = Number(charImageInput.dataset.index);
+  if(!f) { charImageInput.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dataUrl = ev.target.result;
+    // store in characters[idx]
+    if(Number.isFinite(idx) && characters[idx]){
+      characters[idx].url = dataUrl;
+      // update avatar image node
+      const img = new Image();
+      img.onload = ()=> {
+        if(characters[idx]._avatar){
+          characters[idx]._avatar.image(img);
+          tokenLayer.batchDraw();
+        } else {
+          // if node not yet made (rare), create token
+          createTokenNode(characters[idx], idx);
+        }
+      };
+      img.src = dataUrl;
+      refreshCharacters();
+    }
+    charImageInput.value = '';
+  };
+  reader.readAsDataURL(f);
+});
+
+// Add character button: prompts name, creates character and opens file dialog to pick avatar
+document.getElementById('addCharBtn').addEventListener('click', ()=>{
+  const name = prompt('Имя персонажа:', 'Герой');
+  if(!name) return;
+  const ch = {
+    name,
+    hp: 10,
+    maxHp: 10,
+    cd: 0,
+    speed: 30,
+    url: null,
+    x: undefined, y: undefined,
+    size: 64
+  };
+  characters.push(ch);
+  const idx = characters.length - 1;
+  createTokenNode(ch, idx);
+  refreshCharacters();
+  // immediately prompt to upload avatar
+  charImageInput.dataset.index = idx;
+  charImageInput.click();
+});
+
+/* ---------- Экспорт/Импорт: включаем персонажей в JSON ---------- */
 function exportProject(){
   return {
     stage: { x: stage.x(), y: stage.y(), scale: stage.scaleX() },
@@ -317,9 +560,13 @@ function exportProject(){
       rotation: o.node.rotation(),
       zIndex: o.node.zIndex()
     })),
-    characters: characters
+    characters: characters.map(ch=>({
+      name: ch.name, hp: ch.hp, maxHp: ch.maxHp, cd: ch.cd, speed: ch.speed,
+      url: ch.url, x: ch.x, y: ch.y, size: ch.size
+    }))
   };
 }
+
 document.getElementById('saveJsonBtn').onclick=()=>{
   const blob = new Blob([JSON.stringify(exportProject())], {type:'application/json'});
   const a=document.createElement('a');
@@ -327,24 +574,47 @@ document.getElementById('saveJsonBtn').onclick=()=>{
   a.download='dnd_project.json';
   a.click();
 };
+
 document.getElementById('loadJson').onchange=e=>{
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=ev=>{
     const data = JSON.parse(ev.target.result);
-    // объекты
+    // clear objects
     objectsData.forEach(o=>o.node.destroy());
     objectsData=[]; deselect();
-    data.objects.sort((a,b)=>a.zIndex-b.zIndex).forEach(o=>{
+    // restore objects
+    (data.objects||[]).sort((a,b)=>a.zIndex-b.zIndex).forEach(o=>{
       addAsset(o.url, o.name, o.x, o.y, {
         width:o.width, height:o.height,
         scaleX:o.scaleX, scaleY:o.scaleY, rotation:o.rotation
       });
     });
-    stage.position({x:data.stage.x, y:data.stage.y});
-    stage.scale({x:data.stage.scale, y:data.stage.scale});
-    // персонажи
-    characters = data.characters || [];
+    // restore stage transform
+    if(data.stage){
+      stage.position({x: data.stage.x||0, y: data.stage.y||0});
+      const s = data.stage.scale || 1;
+      stage.scale({x:s,y:s});
+    }
+    // restore characters
+    // remove previous token nodes
+    characters.forEach(ch=>{ if(ch._group) ch._group.destroy(); });
+    characters = [];
+    (data.characters||[]).forEach((chData, idx)=>{
+      const ch = {
+        name: chData.name || 'Char',
+        hp: chData.hp ?? 10,
+        maxHp: chData.maxHp ?? (chData.hp ?? 10),
+        cd: chData.cd ?? 0,
+        speed: chData.speed ?? 30,
+        url: chData.url || null,
+        x: chData.x, y: chData.y,
+        size: chData.size || 64
+      };
+      characters.push(ch);
+    });
+    // create token nodes after characters array is ready
+    characters.forEach((ch, idx)=> createTokenNode(ch, idx));
     refreshCharacters();
     stage.batchDraw();
   };
@@ -352,71 +622,9 @@ document.getElementById('loadJson').onchange=e=>{
   e.target.value='';
 };
 
-/* Загрузка пользовательского фона */
-document.getElementById('bgFile').onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    backgroundLayer.destroyChildren();
-    Konva.Image.fromURL(ev.target.result, img=>{
-      img.setAttrs({x:0,y:0,width:stage.width(),height:stage.height(),listening:false});
-      backgroundLayer.add(img);
-      backgroundLayer.batchDraw();
-      gridLayer.moveToTop();
-      gridLayer.batchDraw();
-    });
-  };
-  r.readAsDataURL(f);
-  e.target.value='';
-};
-
-/* Персонажи */
-let characters=[];
-const charDiv=document.getElementById('characters');
-
-function refreshCharacters(){
-  charDiv.innerHTML='';
-  characters.forEach((ch,i)=>{
-    const d=document.createElement('div');
-    d.className='charItem';
-    d.innerHTML=`<h4>${ch.name}</h4>
-      HP: <input type="number" value="${ch.hp}" min="0" id="hp_${i}"><br>
-      КД: <input type="number" value="${ch.cd}" min="0" id="cd_${i}"><br>
-      Скорость: <input type="number" value="${ch.speed}" min="0" id="sp_${i}"><br>
-      <div class="charBtns">
-        <button onclick="damageChar(${i})">− урон</button>
-        <button onclick="healChar(${i})">+ лечение</button>
-      </div>`;
-    charDiv.appendChild(d);
-    ['hp','cd','sp'].forEach(field=>{
-      d.querySelector(`#${field}_${i}`).addEventListener('input',e=>{
-        characters[i][field==='sp'?'speed':field] = Number(e.target.value);
-      });
-    });
-  });
-}
-
-window.damageChar=function(i){
-  const val=Number(prompt('Нанести урон (HP):','1'))||0;
-  characters[i].hp=Math.max(0, characters[i].hp - val);
-  refreshCharacters();
-};
-window.healChar=function(i){
-  const val=Number(prompt('Восстановить HP:','1'))||0;
-  characters[i].hp += val;
-  refreshCharacters();
-};
-
-document.getElementById('addCharBtn').onclick=()=>{
-  const name=prompt('Имя персонажа:','Герой');
-  if(!name) return;
-  characters.push({name, hp:10, cd:0, speed:30});
-  refreshCharacters();
-};
-
-/* Ресайз окна */
+/* ---------- Когда окно ресайзится ---------- */
 window.addEventListener('resize',()=>{
-  stage.width(window.innerWidth - (200 + 260));
+  stage.width(window.innerWidth - (200 + 300));
   stage.height(window.innerHeight);
   backgroundLayer.getChildren().forEach(img=>{
     img.width(stage.width());
@@ -424,6 +632,21 @@ window.addEventListener('resize',()=>{
   });
   backgroundLayer.batchDraw();
   drawGrid();
+});
+
+/* ---------- Вспомогательные функции ---------- */
+// простая HTML-escape для имени
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// при клике на пустом месте — снимаем выделение персонажа и объектов
+stage.on('mousedown', e => {
+  if (e.target === stage || e.target === backgroundLayer || e.target === gridLayer) {
+    deselect();
+    // clear character selection highlight
+    selectedCharacterIndex = null;
+    characters.forEach(ch=>{ if(ch._border) ch._border.stroke('#fff'); });
+    refreshCharacters();
+  }
 });
 </script>
 </body>
