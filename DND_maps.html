@@ -2,10 +2,10 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.6.9</title>
+<title>D&D Map Maker — 0.7.0</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
-  :root { --left:200px; --right:240px; }
+  :root { --left:200px; --right:260px; }
   html,body { margin:0; height:100%; background:#222; color:#eee; font-family:Arial,sans-serif; }
   .layout { display:flex; height:100vh; }
   .panel { background:#333; padding:10px; box-sizing:border-box; overflow:auto; }
@@ -21,12 +21,32 @@
   .asset:hover { background:#5f5f5f; }
   .objItem.active { background:#c8b56a; color:#000; }
 
+  /* --- фиксим большие иконки ассетов --- */
+  .asset .thumb {
+    display:block;
+    width:100%;           /* вписывается в блок */
+    max-height:80px;      /* ограничение по высоте */
+    height:auto;
+    margin-top:4px;
+    object-fit:contain;
+  }
+
   button, input[type=file] {
     width:100%; padding:8px; margin-top:8px;
     border:0; background:#5a5a5a; color:#fff; border-radius:6px; cursor:pointer;
   }
   button:hover, input[type=file]:hover { background:#777; }
+
   .info { font-size:12px; color:#ccc; margin-top:8px; }
+
+  /* персонажи */
+  .charItem {
+    background:#4b4b4b; border:1px solid #555;
+    padding:6px; margin-bottom:8px; border-radius:6px;
+  }
+  .charItem h4 { margin:0 0 4px; font-size:14px; }
+  .charItem input[type=number] { width:60px; }
+  .charBtns button { width:auto; margin-right:4px; margin-top:4px; }
 </style>
 </head>
 <body>
@@ -57,6 +77,10 @@
 
     <h3 style="margin-top:14px;">Фон</h3>
     <input id="bgFile" type="file" accept="image/*">
+
+    <h3 style="margin-top:14px;">Экспериментальные функции</h3>
+    <button id="addCharBtn">Добавить персонажа</button>
+    <div id="characters"></div>
 
     <div class="info">
       • ЛКМ по пустому — перетаскивание карты<br>
@@ -90,7 +114,7 @@ const assets = [
 /* ---------- Сцена ---------- */
 const stage = new Konva.Stage({
   container: 'container',
-  width: window.innerWidth - (200 + 240),
+  width: window.innerWidth - (200 + 260),
   height: window.innerHeight
 });
 const backgroundLayer = new Konva.Layer();
@@ -139,10 +163,7 @@ const transformer = new Konva.Transformer({
     'middle-right','bottom-right','bottom-center',
     'bottom-left','middle-left'
   ],
-  boundBoxFunc:(oldBox,newBox)=>{
-    if(newBox.width<16||newBox.height<16) return oldBox;
-    return newBox;
-  }
+  boundBoxFunc:(oldBox,newBox)=>newBox.width<16||newBox.height<16?oldBox:newBox
 });
 objectLayer.add(transformer);
 
@@ -190,18 +211,15 @@ function toggleSelect(id){ selectedId===id ? deselect() : selectObject(id); }
 function deselect(){ selectedId=null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList(); }
 stage.on('mousedown',e=>{ if(e.target===stage||e.target===backgroundLayer||e.target===gridLayer) deselect(); });
 
-/* Удаление */
+/* Удаление/копия/зеркало/слои */
 document.getElementById('deleteBtn').onclick=()=>{
   if(!selectedId) return;
   const i=objectsData.findIndex(o=>o.id===selectedId);
   if(i>=0){ objectsData[i].node.destroy(); objectsData.splice(i,1); deselect(); refreshObjectList(); }
 };
-
-/* Копирование */
 document.getElementById('copyBtn').onclick=()=>{
   if(!selectedId) return;
   const obj=objectsData.find(o=>o.id===selectedId);
-  if(!obj) return;
   const n=obj.node;
   const pos=stage.getPointerPosition() || {x:n.x()+20,y:n.y()+20};
   addAsset(obj.url, obj.name+' (копия)', pos.x, pos.y, {
@@ -212,31 +230,24 @@ document.getElementById('copyBtn').onclick=()=>{
     rotation: n.rotation()
   });
 };
-
-/* Зеркалирование */
 document.getElementById('mirrorBtn').onclick=()=>{
   if(!selectedId) return;
   const obj=objectsData.find(o=>o.id===selectedId);
-  if(!obj) return;
   obj.node.scaleX(obj.node.scaleX()*-1);
   objectLayer.batchDraw();
 };
-
-/* --- Слои --- */
 document.getElementById('layerUpBtn').onclick=()=>{
   if(!selectedId) return;
-  const obj=objectsData.find(o=>o.id===selectedId);
-  obj.node.moveUp();
+  objectsData.find(o=>o.id===selectedId).node.moveUp();
   objectLayer.batchDraw();
 };
 document.getElementById('layerDownBtn').onclick=()=>{
   if(!selectedId) return;
-  const obj=objectsData.find(o=>o.id===selectedId);
-  obj.node.moveDown();
+  objectsData.find(o=>o.id===selectedId).node.moveDown();
   objectLayer.batchDraw();
 };
 
-/* Масштабирование */
+/* Масштабирование и панорамирование */
 stage.on('wheel',e=>{
   e.evt.preventDefault();
   const ptr=stage.getPointerPosition();
@@ -259,7 +270,6 @@ stage.on('wheel',e=>{
   stage.batchDraw();
 });
 
-/* Панорамирование сцены */
 let isPanning=false,lastPos=null;
 const cont=document.getElementById('container');
 cont.addEventListener('mousedown',e=>{
@@ -295,55 +305,47 @@ document.getElementById('savePngBtn').onclick=()=>{
   const a=document.createElement('a'); a.href=uri; a.download='dnd_map.png'; a.click();
 };
 
-/* --- Сохранение/загрузка проекта (JSON) --- */
-document.getElementById('saveJsonBtn').onclick=()=>{
-  const data = {
-    stage: {
-      x: stage.x(),
-      y: stage.y(),
-      scale: stage.scaleX()
-    },
+/* Сохранение/загрузка проекта (JSON) */
+function exportProject(){
+  return {
+    stage: { x: stage.x(), y: stage.y(), scale: stage.scaleX() },
     objects: objectsData.map(o=>({
-      name: o.name,
-      url: o.url,
-      x: o.node.x(),
-      y: o.node.y(),
-      width: o.node.width(),
-      height: o.node.height(),
-      scaleX: o.node.scaleX(),
-      scaleY: o.node.scaleY(),
+      name: o.name, url: o.url,
+      x: o.node.x(), y: o.node.y(),
+      width: o.node.width(), height: o.node.height(),
+      scaleX: o.node.scaleX(), scaleY: o.node.scaleY(),
       rotation: o.node.rotation(),
       zIndex: o.node.zIndex()
-    }))
+    })),
+    characters: characters
   };
-  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+}
+document.getElementById('saveJsonBtn').onclick=()=>{
+  const blob = new Blob([JSON.stringify(exportProject())], {type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download='dnd_project.json';
   a.click();
 };
-
 document.getElementById('loadJson').onchange=e=>{
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=ev=>{
     const data = JSON.parse(ev.target.result);
-    // очистка
+    // объекты
     objectsData.forEach(o=>o.node.destroy());
-    objectsData=[];
-    deselect();
-    // восстановление объектов
-    data.objects.sort((a,b)=>a.zIndex-b.zIndex).forEach(obj=>{
-      addAsset(obj.url, obj.name, obj.x, obj.y, {
-        width: obj.width,
-        height: obj.height,
-        scaleX: obj.scaleX,
-        scaleY: obj.scaleY,
-        rotation: obj.rotation
+    objectsData=[]; deselect();
+    data.objects.sort((a,b)=>a.zIndex-b.zIndex).forEach(o=>{
+      addAsset(o.url, o.name, o.x, o.y, {
+        width:o.width, height:o.height,
+        scaleX:o.scaleX, scaleY:o.scaleY, rotation:o.rotation
       });
     });
     stage.position({x:data.stage.x, y:data.stage.y});
     stage.scale({x:data.stage.scale, y:data.stage.scale});
+    // персонажи
+    characters = data.characters || [];
+    refreshCharacters();
     stage.batchDraw();
   };
   r.readAsText(f);
@@ -368,9 +370,53 @@ document.getElementById('bgFile').onchange=e=>{
   e.target.value='';
 };
 
+/* Персонажи */
+let characters=[];
+const charDiv=document.getElementById('characters');
+
+function refreshCharacters(){
+  charDiv.innerHTML='';
+  characters.forEach((ch,i)=>{
+    const d=document.createElement('div');
+    d.className='charItem';
+    d.innerHTML=`<h4>${ch.name}</h4>
+      HP: <input type="number" value="${ch.hp}" min="0" id="hp_${i}"><br>
+      КД: <input type="number" value="${ch.cd}" min="0" id="cd_${i}"><br>
+      Скорость: <input type="number" value="${ch.speed}" min="0" id="sp_${i}"><br>
+      <div class="charBtns">
+        <button onclick="damageChar(${i})">− урон</button>
+        <button onclick="healChar(${i})">+ лечение</button>
+      </div>`;
+    charDiv.appendChild(d);
+    ['hp','cd','sp'].forEach(field=>{
+      d.querySelector(`#${field}_${i}`).addEventListener('input',e=>{
+        characters[i][field==='sp'?'speed':field] = Number(e.target.value);
+      });
+    });
+  });
+}
+
+window.damageChar=function(i){
+  const val=Number(prompt('Нанести урон (HP):','1'))||0;
+  characters[i].hp=Math.max(0, characters[i].hp - val);
+  refreshCharacters();
+};
+window.healChar=function(i){
+  const val=Number(prompt('Восстановить HP:','1'))||0;
+  characters[i].hp += val;
+  refreshCharacters();
+};
+
+document.getElementById('addCharBtn').onclick=()=>{
+  const name=prompt('Имя персонажа:','Герой');
+  if(!name) return;
+  characters.push({name, hp:10, cd:0, speed:30});
+  refreshCharacters();
+};
+
 /* Ресайз окна */
 window.addEventListener('resize',()=>{
-  stage.width(window.innerWidth - (200 + 240));
+  stage.width(window.innerWidth - (200 + 260));
   stage.height(window.innerHeight);
   backgroundLayer.getChildren().forEach(img=>{
     img.width(stage.width());
