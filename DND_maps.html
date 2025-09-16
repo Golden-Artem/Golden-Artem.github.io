@@ -2,10 +2,10 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker - 0.6.7</title>
+<title>D&D Map Maker - 0.6.8</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
-  :root { --left:200px; --right:260px; }
+  :root { --left:220px; --right:250px; }
   html,body { margin:0; height:100%; background:#222; color:#eee; font-family:Arial,sans-serif; }
   .layout { display:flex; height:100vh; }
   .panel { background:#333; padding:10px; box-sizing:border-box; overflow:auto; }
@@ -21,12 +21,12 @@
   .objItem { padding:6px; margin-bottom:6px; background:#4b4b4b; border:1px solid #555; border-radius:6px; cursor:pointer; }
   .objItem.active { background:#c8b56a; color:#000; }
 
-  button, input[type=file], select, input[type=range] {
+  button, input[type=file], select {
     width:100%; padding:8px; margin-top:8px;
     border:0; background:#5a5a5a; color:#fff; border-radius:6px; cursor:pointer;
   }
   button:hover, input[type=file]:hover, select:hover { background:#777; }
-  input[type=range] { cursor:pointer; }
+
   .info { font-size:12px; color:#ccc; margin-top:8px; }
 </style>
 </head>
@@ -39,6 +39,16 @@
     <div id="assetList"></div>
     <input id="fileInput" type="file" accept="image/*">
     <button id="saveBtn">Сохранить карту (PNG)</button>
+
+    <h3 style="margin-top:12px;">Тропинка</h3>
+    <select id="brushType">
+      <option value="stone">Каменная</option>
+      <option value="earth">Земляная</option>
+    </select>
+    Толщина: <span id="bwVal">32</span> px
+    <input id="bw" type="range" min="8" max="100" value="32">
+    <button id="toggleBrush">Включить кисть</button>
+    <button id="clearPaths">Очистить тропинки</button>
   </div>
 
   <!-- Центральное поле -->
@@ -55,18 +65,13 @@
     <h3 style="margin-top:14px;">Фон</h3>
     <input id="bgFile" type="file" accept="image/*">
 
-    <h3 style="margin-top:14px;">Кисть-тропинка</h3>
-    <select id="brushType">
-      <option value="stone">Каменная</option>
-      <option value="earth">Земляная</option>
-    </select>
-    Толщина: <span id="brushWidthVal">32</span> px
-    <input id="brushWidth" type="range" min="8" max="100" step="1" value="32">
-    <button id="brushToggle">Включить кисть</button>
-
     <div class="info">
-      • Кисть: ЛКМ и ведите мышь, чтобы проложить выбранную тропинку<br>
-      • Когда кисть выключена — ЛКМ по пустому двигает карту
+      • ЛКМ по пустому — перетаскивание карты (если кисть выключена)<br>
+      • Колёсико вне объекта — масштаб карты<br>
+      • Колёсико на объекте — масштаб объекта<br>
+      • Клик по объекту — выделение/снятие<br>
+      • Углы — изменение размера, кружок сверху — поворот<br>
+      • В режиме кисти ЛКМ рисует тропинку
     </div>
   </div>
 
@@ -87,23 +92,23 @@ const assets = [
   {name:'Сундук',            url:'assets/dungeon_chest.png'},
   {name:'Факел',             url:'assets/dungeon_torch.png'},
   {name:'Руины',             url:'assets/dungeon_rocks.png'},
-  {name:'Каменная тропинка',  url:'assets/stone_path.png'},
-  {name:'Земляная тропинка',  url:'assets/earth_path.png'}
+  {name:'Каменная тропинка', url:'assets/stone_path.png'},
+  {name:'Земляная тропинка', url:'assets/earth_path.png'}
 ];
 
 /* ---------- Сцена ---------- */
 const stage = new Konva.Stage({
   container: 'container',
-  width: window.innerWidth - (200 + 260),
+  width: window.innerWidth - (220 + 250),
   height: window.innerHeight
 });
 const backgroundLayer = new Konva.Layer();
-const pathLayer = new Konva.Layer();      // слой для кисти
 const gridLayer = new Konva.Layer();
+const pathLayer = new Konva.Layer();   // слой для тропинок
 const objectLayer = new Konva.Layer();
 stage.add(backgroundLayer);
-stage.add(pathLayer);
 stage.add(gridLayer);
+stage.add(pathLayer);
 stage.add(objectLayer);
 
 /* Сетка */
@@ -145,7 +150,10 @@ const transformer = new Konva.Transformer({
     'middle-right','bottom-right','bottom-center',
     'bottom-left','middle-left'
   ],
-  boundBoxFunc:(oldBox,newBox)=> (newBox.width<16||newBox.height<16)? oldBox : newBox
+  boundBoxFunc:(oldBox,newBox)=>{
+    if(newBox.width<16||newBox.height<16) return oldBox;
+    return newBox;
+  }
 });
 objectLayer.add(transformer);
 
@@ -191,7 +199,7 @@ function selectObject(id){
 function toggleSelect(id){ selectedId===id ? deselect() : selectObject(id); }
 function deselect(){ selectedId=null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList(); }
 
-/* --- удаление/копия/зеркало --- */
+/* Удаление/копирование/зеркалирование */
 document.getElementById('deleteBtn').onclick=()=>{
   if(!selectedId) return;
   const i=objectsData.findIndex(o=>o.id===selectedId);
@@ -242,34 +250,27 @@ stage.on('wheel',e=>{
   stage.batchDraw();
 });
 
-/* -------- Панорамирование сцены -------- */
+/* Панорамирование сцены (только когда кисть выключена) */
 let isPanning=false,lastPos=null;
 const cont=document.getElementById('container');
-function startPan(e){
-  if (brushActive) return;
+cont.addEventListener('mousedown',e=>{
+  if(brushEnabled) return;
   const target=stage.getIntersection(stage.getPointerPosition());
   if(!target){
     isPanning=true;
     cont.style.cursor='grabbing';
     lastPos={x:e.clientX,y:e.clientY};
   }
-}
-cont.addEventListener('mousedown',startPan);
+});
 cont.addEventListener('mousemove',e=>{
-  if (brushActive) return;
   if(!isPanning) return;
   const dx=e.clientX-lastPos.x, dy=e.clientY-lastPos.y;
   lastPos={x:e.clientX,y:e.clientY};
   stage.position({x:stage.x()+dx, y:stage.y()+dy});
   stage.batchDraw();
 });
-cont.addEventListener('mouseup',()=>{ if(!brushActive){isPanning=false; cont.style.cursor='grab';} });
-cont.addEventListener('mouseleave',()=>{ if(!brushActive){isPanning=false; cont.style.cursor='grab';} });
-
-stage.on('mousedown',e=>{
-  if (brushActive) return;
-  if (e.target===stage||e.target===backgroundLayer||e.target===gridLayer||e.target===pathLayer) deselect();
-});
+cont.addEventListener('mouseup',()=>{isPanning=false; cont.style.cursor=brushEnabled?'crosshair':'grab';});
+cont.addEventListener('mouseleave',()=>{isPanning=false; cont.style.cursor=brushEnabled?'crosshair':'grab';});
 
 /* Загрузка своих ассетов */
 document.getElementById('fileInput').onchange=e=>{
@@ -297,74 +298,16 @@ document.getElementById('bgFile').onchange=e=>{
       backgroundLayer.add(img);
       backgroundLayer.batchDraw();
       gridLayer.moveToTop();
+      gridLayer.batchDraw();
     });
   };
   r.readAsDataURL(f);
   e.target.value='';
 };
 
-/* ---------- Кисть-тропинка ---------- */
-const brushToggle = document.getElementById('brushToggle');
-const brushTypeSel = document.getElementById('brushType');
-const brushWidth = document.getElementById('brushWidth');
-const brushWidthVal = document.getElementById('brushWidthVal');
-
-let brushActive = false;
-brushToggle.onclick = () => {
-  brushActive = !brushActive;
-  brushToggle.textContent = brushActive ? 'Выключить кисть' : 'Включить кисть';
-  if (brushActive) deselect();
-};
-brushWidth.oninput = () => brushWidthVal.textContent = brushWidth.value;
-
-let drawing = false;
-let lastPoint = null;
-
-function addTextureDot(x,y,texImg,size){
-  const imgNode = new Konva.Image({
-    image: texImg,
-    x: x - size/2,
-    y: y - size/2,
-    width: size,
-    height: size,
-    listening:false
-  });
-  pathLayer.add(imgNode);
-  pathLayer.batchDraw();
-}
-
-stage.on('mousedown touchstart', e => {
-  if (!brushActive) return;
-  drawing = true;
-  lastPoint = stage.getPointerPosition();
-});
-
-stage.on('mousemove touchmove', e => {
-  if (!drawing || !brushActive) return;
-  const pos = stage.getPointerPosition();
-  const tex = brushTypeSel.value === 'stone' ? 'assets/stone_path.png' : 'assets/earth_path.png';
-  const img = new Image(); img.src = tex;
-  img.onload = () => {
-    const dist = Math.hypot(pos.x - lastPoint.x, pos.y - lastPoint.y);
-    const step = parseInt(brushWidth.value) * 0.5;
-    if (dist > step) {
-      const steps = Math.floor(dist / step);
-      for(let i=1;i<=steps;i++){
-        const t=i/steps;
-        const nx=lastPoint.x + (pos.x - lastPoint.x)*t;
-        const ny=lastPoint.y + (pos.y - lastPoint.y)*t;
-        addTextureDot(nx,ny,img,parseInt(brushWidth.value));
-      }
-      lastPoint = pos;
-    }
-  };
-});
-
-stage.on('mouseup touchend', () => { drawing=false; });
-
 /* Ресайз окна */
 window.addEventListener('resize',()=>{
-  stage.width(window.innerWidth - (200 + 260));
+  stage.width(window.innerWidth - (220 + 250));
   stage.height(window.innerHeight);
   backgroundLayer.getChildren().forEach(img=>{
     img.width(stage.width());
@@ -372,6 +315,80 @@ window.addEventListener('resize',()=>{
   });
   backgroundLayer.batchDraw();
   drawGrid();
+});
+
+/* ---------- Кисть тропинка ---------- */
+const bwSlider = document.getElementById('bw');
+const bwVal = document.getElementById('bwVal');
+bwSlider.oninput = ()=> bwVal.textContent = bwSlider.value;
+
+let brushEnabled = false;
+document.getElementById('toggleBrush').onclick=()=>{
+  brushEnabled = !brushEnabled;
+  cont.style.cursor = brushEnabled ? 'crosshair' : 'grab';
+  deselect();
+  document.getElementById('toggleBrush').textContent = brushEnabled ? 'Выключить кисть' : 'Включить кисть';
+};
+
+document.getElementById('clearPaths').onclick=()=>{
+  pathLayer.destroyChildren();
+  pathLayer.batchDraw();
+};
+
+/* Загрузка текстур кисти */
+const pathTextures = { stone: new Image(), earth: new Image() };
+pathTextures.stone.src = 'assets/stone_path.png';
+pathTextures.earth.src = 'assets/earth_path.png';
+
+let drawing = false;
+let currentLine = null;
+let points = [];
+
+function startLine(pos){
+  points = [pos.x, pos.y];
+  currentLine = new Konva.Line({
+    points,
+    closed: true,
+    strokeWidth: 0,
+    fillPatternImage: pathTextures[document.getElementById('brushType').value],
+    listening: false
+  });
+  pathLayer.add(currentLine);
+}
+
+function updateLine(pos){
+  const w = parseInt(bwSlider.value);
+  const len = points.length/2;
+  if(len<2) return;
+  const nx = pos.x, ny = pos.y;
+  const lx = points[(len-1)*2-2], ly = points[(len-1)*2-1];
+  const dx = nx-lx, dy = ny-ly;
+  const dist = Math.hypot(dx,dy);
+  if(dist < w/4) return;
+  const ndx = -dy/dist * w/2;
+  const ndy = dx/dist  * w/2;
+  points.splice(len*2,0,nx+ndx,ny+ndy);
+  points.unshift(nx-ndx,ny-ndy);
+  currentLine.points(points);
+  pathLayer.batchDraw();
+}
+
+stage.on('mousedown', e=>{
+  if(!brushEnabled) return;
+  drawing = true;
+  const p = stage.getPointerPosition();
+  startLine(p);
+});
+stage.on('mousemove', e=>{
+  if(!brushEnabled || !drawing) return;
+  const p = stage.getPointerPosition();
+  updateLine(p);
+});
+stage.on('mouseup', ()=>{
+  if(!brushEnabled) return;
+  drawing = false;
+  points = [];
+  currentLine = null;
 });
 </script>
 </body>
