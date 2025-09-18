@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.7.7</title>
+<title>D&D Map Maker — 0.7.4</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
   :root { --left:200px; --right:320px; }
@@ -59,32 +59,8 @@
   /* token visual tweaks ensure on top */
   canvas { image-rendering: optimizeSpeed; }
 </style>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 </head>
 <body>
-
-<div id="authModal" style="position:fixed;inset:0;background:#000c;display:flex;
-align-items:center;justify-content:center;z-index:9999;">
-  <div style="background:#333;padding:20px;border-radius:8px;max-width:300px;">
-    <h3>Вход / Регистрация</h3>
-    <input id="email" type="email" placeholder="Email" style="width:100%;margin-top:8px;">
-    <input id="pass" type="password" placeholder="Пароль" style="width:100%;margin-top:8px;">
-    <button id="loginBtn" style="margin-top:10px;">Войти</button>
-    <button id="signupBtn" style="margin-top:6px;">Создать аккаунт</button>
-    <div id="authErr" style="color:#f88;margin-top:6px;font-size:13px;"></div>
-  </div>
-</div>
-<!-- === Панель комнат === -->
-<div id="roomPanel" style="margin-top:20px;">
-  <h3>Комнаты</h3>
-  <input id="roomName" type="text" placeholder="Название комнаты">
-  <button id="createRoomBtn">Создать комнату</button>
-  <div id="roomsList"></div>
-</div>
-<!-- === /Панель комнат === -->
 <div class="layout">
 
   <!-- Левая панель -->
@@ -141,87 +117,6 @@ align-items:center;justify-content:center;z-index:9999;">
 <input id="charImageInput" type="file" accept="image/*" style="display:none">
 
 <script>
-
-// --- Firebase init ---
-const firebaseConfig = {
-  apiKey: "AIzaSyBh9hdRHlutkp-KzidGy4HI7C1WefsY9UI",
-  authDomain: "dnd-map-80839.firebaseapp.com",
-  projectId: "dnd-map-80839",
-  storageBucket: "dnd-map-80839.firebasestorage.app",
-  messagingSenderId: "19440089702",
-  appId: "1:19440089702:web:14beea350316db9b520ba7"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.firestore();
-// --- Auth logic ---
-const authModal = document.getElementById('authModal');
-const emailInp  = document.getElementById('email');
-const passInp   = document.getElementById('pass');
-const errBox    = document.getElementById('authErr');
-
-document.getElementById('loginBtn').onclick = () => {
-  auth.signInWithEmailAndPassword(emailInp.value, passInp.value)
-    .catch(e => errBox.textContent = e.message);
-};
-document.getElementById('signupBtn').onclick = () => {
-  auth.createUserWithEmailAndPassword(emailInp.value, passInp.value)
-    .catch(e => errBox.textContent = e.message);
-};
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    authModal.style.display = 'none';        // спрятать модалку
-    console.log('Logged in as', user.email); // вы можете показывать имя в UI
-  } else {
-    authModal.style.display = 'flex';
-  }
-});
-
-// ----- Работа с комнатами -----
-let currentUser = null;
-
-firebase.auth().onAuthStateChanged(user => {
-  currentUser = user;
-  if (user) loadRooms();
-  else document.getElementById('roomsList').innerHTML = '';
-});
-
-document.getElementById('createRoomBtn').onclick = async () => {
-  const name = document.getElementById('roomName').value.trim();
-  if (!name || !currentUser) return;
-  await db.collection('rooms').add({
-    name,
-    owner: currentUser.uid,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    players: [currentUser.uid]
-  });
-  document.getElementById('roomName').value = '';
-};
-
-function loadRooms() {
-  db.collection('rooms').orderBy('createdAt','desc')
-    .onSnapshot(snapshot => {
-      const list = document.getElementById('roomsList');
-      list.innerHTML = '';
-      snapshot.forEach(doc => {
-        const room = doc.data();
-        const div = document.createElement('div');
-        div.className = 'roomItem';
-        div.textContent = room.name + (room.owner === currentUser.uid ? ' (моя)' : '');
-        div.onclick = () => joinRoom(doc.id, room);
-        list.appendChild(div);
-      });
-    });
-}
-
-async function joinRoom(roomId, room) {
-  if (!currentUser) return;
-  await db.collection('rooms').doc(roomId).update({
-    players: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-  });
-  alert('Вы вошли в комнату: ' + room.name);
-
 /* ---------- Ассеты ---------- */
 const assets = [
   {name:'Деревянный дом', url:'assets/wood_house.png'},
@@ -725,8 +620,3 @@ stage.on('mousedown', e=>{
 </script>
 </body>
 </html>
-
-
-
-
-
