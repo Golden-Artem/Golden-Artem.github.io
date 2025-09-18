@@ -77,7 +77,14 @@ align-items:center;justify-content:center;z-index:9999;">
     <div id="authErr" style="color:#f88;margin-top:6px;font-size:13px;"></div>
   </div>
 </div>
-
+<!-- === Панель комнат === -->
+<div id="roomPanel" style="margin-top:20px;">
+  <h3>Комнаты</h3>
+  <input id="roomName" type="text" placeholder="Название комнаты">
+  <button id="createRoomBtn">Создать комнату</button>
+  <div id="roomsList"></div>
+</div>
+<!-- === /Панель комнат === -->
 <div class="layout">
 
   <!-- Левая панель -->
@@ -191,6 +198,50 @@ function listRooms(){
       });
     });
 }
+// ----- Работа с комнатами -----
+const db = firebase.firestore();
+let currentUser = null;
+
+firebase.auth().onAuthStateChanged(user => {
+  currentUser = user;
+  if (user) loadRooms();
+  else document.getElementById('roomsList').innerHTML = '';
+});
+
+document.getElementById('createRoomBtn').onclick = async () => {
+  const name = document.getElementById('roomName').value.trim();
+  if (!name || !currentUser) return;
+  await db.collection('rooms').add({
+    name,
+    owner: currentUser.uid,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    players: [currentUser.uid]
+  });
+  document.getElementById('roomName').value = '';
+};
+
+function loadRooms() {
+  db.collection('rooms').orderBy('createdAt','desc')
+    .onSnapshot(snapshot => {
+      const list = document.getElementById('roomsList');
+      list.innerHTML = '';
+      snapshot.forEach(doc => {
+        const room = doc.data();
+        const div = document.createElement('div');
+        div.className = 'roomItem';
+        div.textContent = room.name + (room.owner === currentUser.uid ? ' (моя)' : '');
+        div.onclick = () => joinRoom(doc.id, room);
+        list.appendChild(div);
+      });
+    });
+}
+
+async function joinRoom(roomId, room) {
+  if (!currentUser) return;
+  await db.collection('rooms').doc(roomId).update({
+    players: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+  });
+  alert('Вы вошли в комнату: ' + room.name);
 
 /* ---------- Ассеты ---------- */
 const assets = [
@@ -695,4 +746,5 @@ stage.on('mousedown', e=>{
 </script>
 </body>
 </html>
+
 
