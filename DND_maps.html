@@ -177,29 +177,8 @@ auth.onAuthStateChanged(user => {
     authModal.style.display = 'flex';
   }
 });
-// --- Firestore Rooms helpers ---
-function createRoom(name){
-  return db.collection('rooms').add({
-    name,
-    owner: auth.currentUser.uid,
-    created: firebase.firestore.FieldValue.serverTimestamp()
-  });
-}
 
-function listRooms(){
-  db.collection('rooms')
-    .orderBy('created','desc')
-    .onSnapshot(snap=>{
-      // здесь вы решаете, как выводить список:
-      // например в консоль или в отдельный div
-      console.clear();
-      snap.forEach(doc=>{
-        console.log(doc.id, doc.data());
-      });
-    });
-}
 // ----- Работа с комнатами -----
-const db = firebase.firestore();
 let currentUser = null;
 
 firebase.auth().onAuthStateChanged(user => {
@@ -746,6 +725,7 @@ stage.on('mousedown', e=>{
 </script>
 </body>
 </html>
+
 
 
 
