@@ -1,8 +1,8 @@
-<DOCTYPE html>
+всё правильно? <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.7.4</title>
+<title>D&D Map Maker — 0.7.5</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
   :root { --left:200px; --right:320px; }
@@ -59,8 +59,25 @@
   /* token visual tweaks ensure on top */
   canvas { image-rendering: optimizeSpeed; }
 </style>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 </head>
 <body>
+
+<div id="authModal" style="position:fixed;inset:0;background:#000c;display:flex;
+align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:#333;padding:20px;border-radius:8px;max-width:300px;">
+    <h3>Вход / Регистрация</h3>
+    <input id="email" type="email" placeholder="Email" style="width:100%;margin-top:8px;">
+    <input id="pass" type="password" placeholder="Пароль" style="width:100%;margin-top:8px;">
+    <button id="loginBtn" style="margin-top:10px;">Войти</button>
+    <button id="signupBtn" style="margin-top:6px;">Создать аккаунт</button>
+    <div id="authErr" style="color:#f88;margin-top:6px;font-size:13px;"></div>
+  </div>
+</div>
+
 <div class="layout">
 
   <!-- Левая панель -->
@@ -117,6 +134,64 @@
 <input id="charImageInput" type="file" accept="image/*" style="display:none">
 
 <script>
+
+// --- Firebase init ---
+const firebaseConfig = {
+  apiKey: "AIzaSyBh9hdRHlutkp-KzidGy4HI7C1WefsY9UI",
+  authDomain: "dnd-map-80839.firebaseapp.com",
+  projectId: "dnd-map-80839",
+  storageBucket: "dnd-map-80839.firebasestorage.app",
+  messagingSenderId: "19440089702",
+  appId: "1:19440089702:web:14beea350316db9b520ba7"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+// --- Auth logic ---
+const authModal = document.getElementById('authModal');
+const emailInp  = document.getElementById('email');
+const passInp   = document.getElementById('pass');
+const errBox    = document.getElementById('authErr');
+
+document.getElementById('loginBtn').onclick = () => {
+  auth.signInWithEmailAndPassword(emailInp.value, passInp.value)
+    .catch(e => errBox.textContent = e.message);
+};
+document.getElementById('signupBtn').onclick = () => {
+  auth.createUserWithEmailAndPassword(emailInp.value, passInp.value)
+    .catch(e => errBox.textContent = e.message);
+};
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    authModal.style.display = 'none';        // спрятать модалку
+    console.log('Logged in as', user.email); // вы можете показывать имя в UI
+  } else {
+    authModal.style.display = 'flex';
+  }
+});
+// --- Firestore Rooms helpers ---
+function createRoom(name){
+  return db.collection('rooms').add({
+    name,
+    owner: auth.currentUser.uid,
+    created: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+function listRooms(){
+  db.collection('rooms')
+    .orderBy('created','desc')
+    .onSnapshot(snap=>{
+      // здесь вы решаете, как выводить список:
+      // например в консоль или в отдельный div
+      console.clear();
+      snap.forEach(doc=>{
+        console.log(doc.id, doc.data());
+      });
+    });
+}
+
 /* ---------- Ассеты ---------- */
 const assets = [
   {name:'Деревянный дом', url:'assets/wood_house.png'},
@@ -620,5 +695,3 @@ stage.on('mousedown', e=>{
 </script>
 </body>
 </html>
-
-
