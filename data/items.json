@@ -1,1 +1,23 @@
+{
+  "potion_of_healing": {
+    "id": "potion_of_healing",
+    "name": "Зелье лечения",
+    "type": "Расходуемый",
+    "rarity": "Обычный",
+    "attunement": false,
+    "tags": ["consumable","healing"],
+    "source": "SRD",
+    "description": "<p>При употреблении восстанавливает 2d4+2 хит-поинтов. Эффект мгновенный.</p>"
+  },
+  "bag_of_holding": {
+    "id": "bag_of_holding",
+    "name": "Мешок-хранитель",
+    "type": "Волшебный предмет",
+    "rarity": "Редкий",
+    "attunement": false,
+    "tags": ["wondrous","storage"],
+    "source": "SRD",
+    "description": "<p>Мешок выглядит как обычный мешок, но внутри гораздо больше места. Вместимость и ограничения описаны в SRD.</p>"
+  }
+}
 
