@@ -1,1 +1,15 @@
+body{font-family:Arial,Helvetica,sans-serif;background:#111;color:#eee;margin:0;padding:0}
+header{padding:12px;background:#1b1b1b;display:flex;flex-direction:column;gap:8px}
+#globalSearch{padding:8px;border-radius:6px;border:0;width:100%}
+#filters{display:flex;gap:6px}
+.tab{background:#333;color:#fff;border:0;padding:8px;border-radius:6px;cursor:pointer}
+.tab.active{background:#c8b56a;color:#000}
+#list{padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.card{background:#222;padding:10px;border-radius:8px;border:1px solid #333;cursor:pointer}
+.card h3{margin:0 0 6px 0}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center}
+#modal.hidden{display:none}
+#modalInner{background:#121212;color:#eee;padding:16px;border-radius:10px;max-width:800px;width:90%;position:relative}
+#closeModal{position:absolute;right:8px;top:8px;background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer}
+#modalContent p{line-height:1.4}
 
