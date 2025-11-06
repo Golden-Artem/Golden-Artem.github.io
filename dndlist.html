@@ -1,36 +1,276 @@
 <!doctype html>
+
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Лист персонажа — база</title>
-<link rel="stylesheet" href="style.css">
+<title>Лист персонажа — DnD (рус.)</title>
+<style>
+:root{--bg:#f7f6f3;--panel:#fff;--accent:#333;--muted:#666;--accent2:#8b5cf6}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;color:var(--accent)}
+.container{max-width:1200px;margin:18px auto;padding:14px}
+.header{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.hbrand{display:flex;gap:12px;align-items:center}
+.logo{width:64px;height:64px;border-radius:8px;background:linear-gradient(135deg,var(--accent2),#5b9df6);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.title{font-size:18px;font-weight:700}
+.controls{display:flex;gap:8px;align-items:center}
+.btn{background:var(--panel);border:1px solid #ddd;padding:8px 10px;border-radius:8px;cursor:pointer}
+.btn.primary{background:var(--accent2);color:#fff;border:0}
+.row{display:flex;gap:12px;margin-top:12px}
+.col{background:var(--panel);padding:12px;border-radius:10px;flex:1;border:1px solid #e6e6e6}
+.leftcol{flex:0 0 420px}
+.field{margin-bottom:8px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.field input[type=text], .field input[type=number], .field select, .field textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;background:transparent}
+.row.small{gap:6px}
+.grid-attrs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.attr{padding:8px;border-radius:8px;border:1px solid #eee;text-align:center}
+.attr .val{font-size:22px;font-weight:700}
+.toggle{display:flex;align-items:center;gap:8px}
+.dice{display:flex;gap:6px;margin-top:8px}
+.dice button{padding:8px;border-radius:6px;border:1px solid #ccc;background:#fff}
+.avatar-area{display:flex;gap:8px;align-items:flex-start}
+#avatarCanvas{border:1px dashed #bbb;border-radius:6px;width:160px;height:160px;background:#fff}
+.small-muted{font-size:12px;color:var(--muted)}
+.footer{margin-top:14px;display:flex;gap:8px;justify-content:flex-end}
+@media(max-width:900px){.row{flex-direction:column}.leftcol{flex:1}}
+</style>
 </head>
 <body>
-  <header>
-    <h1>База: заклинания, предметы, классы, расы, эффекты</h1>
-    <input id="globalSearch" placeholder="Искать (название / теги)..." />
-    <div id="filters">
-      <button data-type="spells" class="tab active">Заклинания</button>
-      <button data-type="items" class="tab">Предметы</button>
-      <button data-type="classes" class="tab">Классы</button>
-      <button data-type="subclasses" class="tab">Подклассы</button>
-      <button data-type="races" class="tab">Расы</button>
-      <button data-type="effects" class="tab">Эффекты</button>
+<div class="container">
+  <div class="header">
+    <div class="hbrand">
+      <div class="logo">D&amp;D</div>
+      <div>
+        <div class="title">Лист персонажа — DnD (рус.)</div>
+        <div class="small-muted">Редактируемый, сохранение в JSON, адаптивный</div>
+      </div>
     </div>
-  </header>
-
-  <main>
-    <div id="list"></div>
-  </main>
-
-  <div id="modal" class="hidden">
-    <div id="modalInner">
-      <button id="closeModal">✕</button>
-      <div id="modalContent"></div>
+    <div class="controls">
+      <button class="btn" id="loadBtn">Загрузить файл</button>
+      <input id="fileInput" type="file" accept="application/json" style="display:none">
+      <button class="btn" id="saveBtn">Сохранить в JSON</button>
+      <button class="btn primary" id="clearBtn">Очистить лист</button>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <div class="row">
+    <div class="col leftcol">
+      <div class="field"><label>Имя персонажа</label><input type="text" id="name"></div>
+      <div class="row small">
+        <div style="flex:1" class="field"><label>Класс / Подкласс</label>
+          <select id="classSel"></select>
+        </div>
+        <div style="width:90px" class="field"><label>Уровень</label><input type="number" id="level" min="1" max="20" value="1"></div>
+      </div>
+      <div class="row small">
+        <div style="flex:1" class="field"><label>Раса</label><select id="raceSel"></select></div>
+        <div style="flex:1" class="field"><label>Происхождение</label><input id="background" type="text"></div>
+      </div>
+      <div class="grid-attrs" style="margin-top:8px;margin-bottom:8px">
+        <div class="attr"><div class="small-muted">Сила</div><div class="val"><input id="str" type="number" value="10" style="width:48px;text-align:center;border:0;background:transparent"></div></div>
+        <div class="attr"><div class="small-muted">Ловкость</div><div class="val"><input id="dex" type="number" value="10" style="width:48px;text-align:center;border:0;background:transparent"></div></div>
+        <div class="attr"><div class="small-muted">Телосложение</div><div class="val"><input id="con" type="number" value="10" style="width:48px;text-align:center;border:0;background:transparent"></div></div>
+        <div class="attr"><div class="small-muted">Интеллект</div><div class="val"><input id="int" type="number" value="10" style="width:48px;text-align:center;border:0;background:transparent"></div></div>
+        <div class="attr"><div class="small-muted">Мудрость</div><div class="val"><input id="wis" type="number" value="10" style="width:48px;text-align:center;border:0;background:transparent"></div></div>
+        <div class="attr"><div class="small-muted">Харизма</div><div class="val"><input id="cha" type="number" value="10" style="width:48px;text-align:center;border:0;background:transparent"></div></div>
+      </div>
+
+```
+  <div class="field"><label>Навыки / особенности (кратко)</label><textarea id="features" rows="6"></textarea></div>
+
+  <div class="field"><label>Снаряжение</label><textarea id="equipment" rows="5"></textarea></div>
+
+  <div style="margin-top:8px">
+    <label><input type="checkbox" id="autoFill" checked> Авто-заполнение по классу/расе (можно отключить)</label>
+  </div>
+
+</div>
+
+<div class="col">
+  <div style="display:flex;gap:12px;align-items:flex-start">
+    <div style="flex:1">
+      <div class="field"><label>Хит-поинты (макс)</label><input id="hpmax" type="number" value="10"></div>
+      <div class="field"><label>Текущие HP</label><input id="hpcur" type="number" value="10"></div>
+      <div class="field"><label>Бонус мастерства</label><input id="prof" type="number" value="2"></div>
+      <div class="field"><label>Класс доспеха (AC)</label><input id="ac" type="number" value="10"></div>
+
+      <div class="field"><label>Описание внешности</label><textarea id="appearance" rows="4"></textarea></div>
+
+      <div class="field avatar-area">
+        <div>
+          <label>Аватар (вставить или нарисовать)</label>
+          <canvas id="avatarCanvas" width="320" height="320"></canvas>
+          <div style="margin-top:6px;display:flex;gap:6px">
+            <input id="imgLoad" type="file" accept="image/*" style="display:none">
+            <button class="btn" id="loadImgBtn">Загрузить картинку</button>
+            <button class="btn" id="drawBtn">Рисовать</button>
+            <button class="btn" id="clearImgBtn">Очистить</button>
+          </div>
+          <div class="small-muted" style="margin-top:6px">Инструменты: рисование кистью, стерка. На мобильном — рисование пальцем.</div>
+        </div>
+        <div style="flex:1">
+          <label>Внешность (подробно)</label>
+          <textarea id="appearance_long" rows="8"></textarea>
+        </div>
+      </div>
+
+    </div>
+    <div style="width:260px">
+      <div class="field"><label>Заклинания / Эффекты (кратко)</label><textarea id="spells" rows="8"></textarea></div>
+
+      <div class="field"><label>Лист бросков кубиков</label>
+        <div class="dice">
+          <button data-d="4">d4</button>
+          <button data-d="6">d6</button>
+          <button data-d="8">d8</button>
+          <button data-d="12">d12</button>
+          <button data-d="20">d20</button>
+        </div>
+        <div id="diceResult" class="small-muted" style="margin-top:6px">Результат: —</div>
+      </div>
+
+      <div class="field"><label>Короткая заметка</label><textarea id="notes" rows="6"></textarea></div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <div class="footer">
+    <div class="small-muted" style="margin-right:auto">Формат сохранения: JSON. Можно загрузить обратно.</div>
+    <button class="btn" id="previewBtn">Предпросмотр (печать)</button>
+    <button class="btn" id="downloadImgBtn">Скачать аватар</button>
+  </div>
+</div>
+
+<script>
+// ====== Простая реализация логики листа персонажа ======
+const classes = {
+  "Воин": {hp_die:10, prof:2, skills:["Атлетика"]},
+  "Плут": {hp_die:8, prof:2, skills:["Ловкость","Преступность"]},
+  "Колдун": {hp_die:6, prof:2, skills:["Магия"]},
+  "Маг": {hp_die:6, prof:2, skills:["Проницательность"]}
+};
+const races = {"Человек":{},"Эльф":{},"Дварф":{},"Полуэльф":{},"Хафлинг":{}};
+
+// элементы
+const el = id=>document.getElementById(id);
+const classSel = el('classSel'), raceSel = el('raceSel');
+// fill selects
+for(let k of Object.keys(classes)) classSel.appendChild(new Option(k,k));
+for(let r of Object.keys(races)) raceSel.appendChild(new Option(r,r));
+
+// autopopulate when class changes
+classSel.addEventListener('change', ()=>{
+  if(!el('autoFill').checked) return;
+  const c = classes[classSel.value];
+  if(!c) return;
+  // set hp die as suggestion
+  el('hpmax').value = c.hp_die || el('hpmax').value;
+  el('prof').value = c.prof || el('prof').value;
+  // add default features
+  if(c.skills) el('features').value = (el('features').value ? el('features').value + '\n' : '') + 'Владения: ' + c.skills.join(', ');
+});
+
+// dice
+document.querySelectorAll('.dice button').forEach(b=>b.addEventListener('click', ()=>{
+  const d = +b.dataset.d; const val = 1 + Math.floor(Math.random()*d);
+  el('diceResult').textContent = `Результат: d${d} → ${val}`;
+}));
+
+// save / load JSON
+el('saveBtn').addEventListener('click', ()=>{
+  const data = collect();
+  const blob = new Blob([JSON.stringify(data, null, 2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (data.name||'character') + '.json'; a.click();
+});
+
+el('loadBtn').addEventListener('click', ()=> el('fileInput').click());
+el('fileInput').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = ev=>{
+    try{ const data = JSON.parse(ev.target.result); apply(data); }catch(err){ alert('Ошибка разбора JSON: '+err); }
+  }; r.readAsText(f);
+  e.target.value = '';
+});
+
+el('clearBtn').addEventListener('click', ()=>{
+  if(!confirm('Очистить все поля?')) return;
+  document.querySelectorAll('input,textarea,select').forEach(i=>{
+    if(i.type==='number') i.value = i.defaultValue || 0; else if(i.tagName==='SELECT') i.selectedIndex = 0; else i.value = '';
+  });
+  // reset avatar
+  drawCtx.clearRect(0,0,avatar.width,avatar.height);
+});
+
+function collect(){
+  return {
+    name: el('name').value,
+    class: classSel.value,
+    level: +el('level').value,
+    race: raceSel.value,
+    background: el('background').value,
+    stats: {str:+el('str').value,dex:+el('dex').value,con:+el('con').value,int:+el('int').value,wis:+el('wis').value,cha:+el('cha').value},
+    hpmax:+el('hpmax').value,hpcur:+el('hpcur').value,prof:+el('prof').value,ac:+el('ac').value,
+    features: el('features').value,equipment: el('equipment').value,spells: el('spells').value,notes: el('notes').value,
+    appearance: el('appearance').value,appearance_long: el('appearance_long').value,
+    avatar: avatar.toDataURL()
+  };
+}
+function apply(data){
+  if(!data) return;
+  el('name').value = data.name||'';
+  classSel.value = data.class||classSel.value;
+  el('level').value = data.level||1;
+  raceSel.value = data.race||raceSel.value;
+  el('background').value = data.background||'';
+  if(data.stats){ el('str').value=data.stats.str||10; el('dex').value=data.stats.dex||10; el('con').value=data.stats.con||10; el('int').value=data.stats.int||10; el('wis').value=data.stats.wis||10; el('cha').value=data.stats.cha||10; }
+  el('hpmax').value = data.hpmax||10; el('hpcur').value = data.hpcur||10; el('prof').value = data.prof||2; el('ac').value = data.ac||10;
+  el('features').value = data.features||''; el('equipment').value = data.equipment||''; el('spells').value = data.spells||''; el('notes').value = data.notes||'';
+  el('appearance').value = data.appearance||''; el('appearance_long').value = data.appearance_long||'';
+  if(data.avatar){ loadAvatarFromDataUrl(data.avatar); }
+}
+
+// Avatar canvas: drawing + load image
+const avatar = el('avatarCanvas'); const drawCtx = avatar.getContext('2d');
+let drawing=false; let drawMode=false; let lastPos=null; let brushSize=4; let brushColor='#222';
+// Hi-DPI adjust
+function resizeCanvasForDPR(){ const dpr = window.devicePixelRatio||1; avatar.width = 320 * dpr; avatar.height = 320 * dpr; avatar.style.width = '160px'; avatar.style.height = '160px'; drawCtx.scale(dpr,dpr); drawCtx.fillStyle='#fff'; drawCtx.fillRect(0,0,160,160);} resizeCanvasForDPR();
+
+el('loadImgBtn').addEventListener('click', ()=> el('imgLoad').click());
+el('imgLoad').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload = ev=> loadAvatarFromDataUrl(ev.target.result); r.readAsDataURL(f); e.target.value='';
+});
+function loadAvatarFromDataUrl(url){ const img=new Image(); img.onload=()=>{ drawCtx.clearRect(0,0,160,160); drawCtx.drawImage(img,0,0,160,160); }; img.src = url; }
+
+el('drawBtn').addEventListener('click', ()=>{ drawMode = !drawMode; el('drawBtn').textContent = drawMode? 'Рисование: Вкл' : 'Рисовать'; });
+el('clearImgBtn').addEventListener('click', ()=>{ drawCtx.clearRect(0,0,160,160); drawCtx.fillStyle='#fff'; drawCtx.fillRect(0,0,160,160); });
+
+function pointerPos(e){ const r = avatar.getBoundingClientRect(); const x = (e.clientX||e.touches[0].clientX) - r.left; const y = (e.clientY||e.touches[0].clientY) - r.top; return {x,y}; }
+avatar.addEventListener('pointerdown', e=>{ if(!drawMode) return; drawing=true; lastPos=pointerPos(e); e.preventDefault(); });
+avatar.addEventListener('pointermove', e=>{ if(!drawing) return; const p=pointerPos(e); drawCtx.strokeStyle = brushColor; drawCtx.lineWidth = brushSize; drawCtx.lineCap='round'; drawCtx.beginPath(); drawCtx.moveTo(lastPos.x, lastPos.y); drawCtx.lineTo(p.x,p.y); drawCtx.stroke(); lastPos=p; });
+avatar.addEventListener('pointerup', e=>{ drawing=false; lastPos=null; });
+avatar.addEventListener('pointerleave', e=>{ drawing=false; lastPos=null; });
+
+// download avatar
+el('downloadImgBtn').addEventListener('click', ()=>{ const a=document.createElement('a'); a.href = avatar.toDataURL(); a.download = (el('name').value||'avatar') + '.png'; a.click(); });
+
+// preview / print
+el('previewBtn').addEventListener('click', ()=>{
+  const w = window.open('','_blank');
+  const data = collect();
+  const html = `<html><head><meta charset="utf-8"><title>Preview</title><style>body{font-family:Arial;padding:20px}h1{font-size:18px}</style></head><body><h1>${escapeHtml(data.name||'Персонаж')}</h1><pre>${escapeHtml(JSON.stringify(data,null,2))}</pre></body></html>`;
+
+w.document.open(); w.document.write(html); w.document.close();
+});
+
+function escapeHtml(s){ return String(s).replace(/[&<>'"]/g,c=>({'&':'&','<':'<','>':'>','"':'"',"'":'''}[c])); }
+
+// quick init: sample class/race
+apply({name:'',class:'Плут',level:1,race:'Человек',hpmax:8,hpcur:8,prof:2,ac:10,stats:{str:10,dex:14,con:12,int:10,wis:10,cha:12}});
+
+</script>
 </body>
 </html>
