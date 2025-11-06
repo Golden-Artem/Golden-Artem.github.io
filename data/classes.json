@@ -1,1 +1,28 @@
+{
+  "wizard": {
+    "id": "wizard",
+    "name": "Волшебник",
+    "hit_die": "d6",
+    "primary_ability": ["Интеллект"],
+    "proficiencies": {
+      "armor": [],
+      "weapons": ["простые оружия"],
+      "saving_throws": ["Интеллект", "Мудрость"],
+      "skills": "Выберите два"
+    },
+    "tags": ["spellcaster","arcane"],
+    "source": "SRD",
+    "description": "<p>Волшебники — архетипы изучающих магию. Особенности: школа магии, многократные заклинания, каноны восстановления, доступ к большому списку заклинаний.</p>",
+    "subclasses": ["evocation","illusion","necromancy"]
+  },
+  "cleric": {
+    "id": "cleric",
+    "name": "Жрец",
+    "hit_die": "d8",
+    "primary_ability": ["Мудрость"],
+    "tags": ["spellcaster","divine"],
+    "description": "<p>Жрецы черпают силу у божества или божественной силы. Они обладают заклинаниями лечения и поддержкой, а также тематическими доменами.</p>",
+    "subclasses": ["life_domain","war_domain"]
+  }
+}
 
