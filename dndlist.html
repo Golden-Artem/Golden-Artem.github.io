@@ -1,1 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Лист персонажа — база</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>База: заклинания, предметы, классы, расы, эффекты</h1>
+    <input id="globalSearch" placeholder="Искать (название / теги)..." />
+    <div id="filters">
+      <button data-type="spells" class="tab active">Заклинания</button>
+      <button data-type="items" class="tab">Предметы</button>
+      <button data-type="classes" class="tab">Классы</button>
+      <button data-type="subclasses" class="tab">Подклассы</button>
+      <button data-type="races" class="tab">Расы</button>
+      <button data-type="effects" class="tab">Эффекты</button>
+    </div>
+  </header>
 
+  <main>
+    <div id="list"></div>
+  </main>
+
+  <div id="modal" class="hidden">
+    <div id="modalInner">
+      <button id="closeModal">✕</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
