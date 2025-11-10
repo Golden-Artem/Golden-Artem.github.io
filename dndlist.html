@@ -1,261 +1,346 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Лист персонажа D&D</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Лист персонажа — DnD</title>
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 10px;
-        background: #f5f5f5;
-    }
-    h2 { margin-top: 20px; }
-    .section { background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    label { display: block; margin-top: 5px; }
-    input[type=text], input[type=number], textarea, select { width: 100%; padding: 5px; margin-top: 3px; box-sizing: border-box; }
-    .flex { display: flex; flex-wrap: wrap; gap: 10px; }
-    .flex > div { flex: 1 1 120px; }
-    button { padding: 8px 12px; margin-top: 10px; }
-    .skills label { display: flex; justify-content: space-between; align-items: center; }
-    .dice-result { margin-top: 5px; font-weight: bold; }
-    @media(max-width:600px){
-        .flex { flex-direction: column; }
-    }
+  :root{
+    --bg:#0f1720;
+    --panel:#111821;
+    --muted:#9aa6b2;
+    --text:#e6eef6;
+    --accent:#8ab4ff;
+    --card:#0b1220;
+    --accent-2:#ffd27a;
+  }
+  :root.light{
+    --bg:#f4f6f8;
+    --panel:#ffffff;
+    --muted:#475569;
+    --text:#0b1720;
+    --accent:#1976d2;
+    --card:#ffffff;
+    --accent-2:#f6b042;
+  }
+
+  html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,var(--bg),#051018);color:var(--text);}
+  .app { display:flex; gap:12px; padding:12px; box-sizing:border-box; height:100vh; }
+  .sheet { flex:1 1 720px; background:var(--panel); border-radius:10px; padding:12px; overflow:auto; box-shadow:0 6px 26px rgba(0,0,0,0.6); }
+  .controls { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  button, select, input[type="text"], input[type="file"], textarea { background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,0.04); padding:8px 10px; border-radius:8px; font-size:14px; outline:none; }
+  button:hover{filter:brightness(1.06);cursor:pointer}
+  .row {display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap;}
+  .field {display:flex; flex-direction:column; gap:6px; min-width:120px;}
+  label{font-size:13px;color:var(--muted)}
+  input[type="text"], select{min-width:120px}
+  .big-grid{ display:grid; grid-template-columns: 1fr 360px; gap:12px; }
+  .panel-card{ background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06)); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); }
+  .stats { display:flex; gap:8px; align-items:center; }
+  .stat { width:64px; background:rgba(255,255,255,0.02); padding:8px; border-radius:8px; text-align:center; }
+  .stat .val input{ background:transparent;border:0;color:var(--text);width:48px;text-align:center;font-weight:700 }
+  .avatar-wrap { display:flex; flex-direction:column; gap:8px; align-items:center; }
+  canvas#avatarCanvas { border-radius:8px; background:#0c1220; border:1px solid rgba(255,255,255,0.04); touch-action:none; width:200px; height:200px; }
+  .sidebar { width:360px; display:flex; flex-direction:column; gap:10px; }
+  .search-box { display:flex; gap:6px; }
+  .list { max-height:54vh; overflow:auto; border-radius:8px; padding:6px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
+  .list .item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px; border-radius:6px; margin-bottom:6px; background:rgba(255,255,255,0.01); }
+  .list .item .meta{color:var(--muted);font-size:13px}
+  .selected-list { background:rgba(0,0,0,0.06); padding:8px; border-radius:8px; max-height:26vh; overflow:auto; }
+  .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:9999; }
+  .modal.active { display:flex; }
+  .modal .window { background:var(--panel); padding:18px; border-radius:10px; width:min(880px,95%); max-height:84vh; overflow:auto; border:1px solid rgba(255,255,255,0.03); }
+  .dice-row { display:flex; gap:6px; align-items:center; margin-top:8px; }
+  .dice-row button { min-width:56px; }
+  @media (max-width:980px){ .big-grid { grid-template-columns: 1fr; } .sidebar { width:100% } }
+  .theme-toggle { margin-left:auto; }
+  .muted-note { color:var(--muted); font-size:13px; }
+  .desc { font-size:14px; color:var(--muted); white-space:pre-wrap; margin-top:8px; }
+  /* small fixes for AC/Init alignment */
+  .ac-init-row { display:flex; gap:8px; align-items:center; }
+  .money-grid { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .money-grid .money { min-width:64px; display:flex; flex-direction:column; gap:6px; }
+  /* ensure inputs don't overflow on mobile */
+  input, textarea, select { max-width:100%; box-sizing:border-box; }
 </style>
 </head>
 <body>
+<div class="app">
+  <div class="sheet">
+    <div class="controls">
+      <button id="saveJsonBtn">Сохранить в JSON</button>
+      <input id="loadJson" type="file" accept=".json" />
+      <button id="clearBtn">Очистить лист</button>
 
-<h1>Лист персонажа D&D</h1>
+      <label style="display:flex;align-items:center;gap:6px;margin-left:6px">
+        <input type="checkbox" id="autoFill" checked/> Авто-заполнение
+      </label>
 
-<div class="section">
-    <h2>Основное</h2>
-    <label>Имя: <input type="text" id="name"></label>
-    <label>Класс: <input type="text" id="class"></label>
-    <label>Подкласс: <input type="text" id="subclass"></label>
-    <div class="flex">
-        <div><label>Здоровье: <input type="number" id="hp" min="0"></label></div>
-        <div><label>Мана: <input type="number" id="mana" min="0"></label></div>
-        <div><label>Класс брони: <input type="number" id="ac" min="0"></label></div>
-        <div><label>Инициатива: <input type="number" id="initiative"></label></div>
-        <div><label>Скорость: <input type="number" id="speed"></label></div>
-        <div><label>Пассивная внимательность: <input type="number" id="passive_perception"></label></div>
-        <div><label>Деньги: <input type="text" id="money"></label></div>
+      <div class="theme-toggle" style="margin-left:auto">
+        <button id="toggleTheme">Тёмная тема</button>
+      </div>
     </div>
-</div>
 
-<div class="section">
-    <h2>Характеристики</h2>
-    <div class="flex">
-        <div><label>Сила: <input type="number" id="strength"></label></div>
-        <div><label>Ловкость: <input type="number" id="dexterity"></label></div>
-        <div><label>Выносливость: <input type="number" id="constitution"></label></div>
-        <div><label>Интеллект: <input type="number" id="intelligence"></label></div>
-        <div><label>Мудрость: <input type="number" id="wisdom"></label></div>
-        <div><label>Харизма: <input type="number" id="charisma"></label></div>
+    <div class="big-grid">
+      <div>
+        <div class="row">
+          <div class="field" style="flex:1;">
+            <label>Имя персонажа</label>
+            <input type="text" id="charName" placeholder="Имя" />
+          </div>
+
+          <div class="field">
+            <label>Класс</label>
+            <select id="classSelect"></select>
+          </div>
+          <div class="field">
+            <label>Подкласс</label>
+            <select id="subclassSelect"><option value="">—</option></select>
+          </div>
+          <div class="field">
+            <label>Уровень</label>
+            <input type="text" id="level" value="1"/>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Раса</label>
+            <select id="raceSelect"></select>
+          </div>
+
+          <div class="field">
+            <label>Происхождение / Фон</label>
+            <input id="background" type="text"/>
+          </div>
+
+          <div style="flex:1" class="field">
+            <label>Архетип / Специальность</label>
+            <input id="customFeature" type="text" placeholder="Название способности (вручную)"/>
+          </div>
+        </div>
+
+        <hr style="opacity:0.06">
+
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:13px;color:var(--muted)">Характеристики</div>
+              </div>
+              <div class="muted-note">Редактируйте вручную или используйте авто-заполнение</div>
+            </div>
+
+            <div class="stats" id="statsBlock" style="margin-top:8px;"></div>
+
+            <div style="margin-top:12px;" class="panel-card">
+              <div style="display:flex;gap:8px;align-items:center;">
+                <div style="flex:1">
+                  <label>Текущие HP</label>
+                  <input id="currentHP" type="text" />
+                </div>
+                <div class="field" style="width:120px">
+                  <label>Класс брони (КД)</label>
+                  <input id="ac" type="text" />
+                </div>
+                <div class="field" style="width:120px">
+                  <label>Инициатива</label>
+                  <input id="init" type="text" />
+                </div>
+              </div>
+
+              <div style="margin-top:8px;">
+                <label>Короткое описание персонажа</label>
+                <textarea id="shortNote" rows="3" style="width:100%;border-radius:6px;padding:8px;background:transparent;color:var(--text);border:1px solid rgba(255,255,255,0.03)"></textarea>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:10px;">
+              <div style="flex:1" class="panel-card">
+                <label>Снаряжение</label>
+                <div style="display:flex;gap:6px;margin-top:6px">
+                  <input id="itemInput" type="text" placeholder="Добавить предмет вручную"/>
+                  <button id="addItemBtn">Добавить</button>
+                </div>
+                <div id="itemList" class="selected-list" style="margin-top:8px"></div>
+
+                <!-- Блок денег (под инвентарём) -->
+                <div style="margin-top:10px">
+                  <label>Деньги</label>
+                  <div class="money-grid">
+                    <div class="money">
+                      <label>Медные (CP)</label>
+                      <input id="money_cp" type="number" min="0" value="0">
+                    </div>
+                    <div class="money">
+                      <label>Серебряные (SP)</label>
+                      <input id="money_sp" type="number" min="0" value="0">
+                    </div>
+                    <div class="money">
+                      <label>Золотые (GP)</label>
+                      <input id="money_gp" type="number" min="0" value="0">
+                    </div>
+                    <div class="money">
+                      <label>Платиновые (PP)</label>
+                      <input id="money_pp" type="number" min="0" value="0">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="width:220px" class="panel-card">
+                <label>Навыки / Особенности (поиск)</label>
+                <div style="display:flex;gap:6px;margin-top:6px">
+                  <input id="skillSearch" type="text" placeholder="Поиск навыка..." />
+                  <button id="skillAddBtn">Поиск</button>
+                </div>
+                <div id="skillResults" class="list" style="margin-top:8px"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px" class="panel-card">
+              <label>Дополнительные заметки / История</label>
+              <textarea id="longNote" rows="6" style="width:100%;border-radius:6px;padding:8px;background:transparent;color:var(--text);border:1px solid rgba(255,255,255,0.03)"></textarea>
+            </div>
+
+            <div style="margin-top:10px" class="panel-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>Кубики</div>
+                <div class="muted-note">Нажмите — бросок появится ниже</div>
+              </div>
+              <div class="dice-row">
+                <button class="diceBtn" data-sides="4">d4</button>
+                <button class="diceBtn" data-sides="6">d6</button>
+                <button class="diceBtn" data-sides="8">d8</button>
+                <button class="diceBtn" data-sides="12">d12</button>
+                <button class="diceBtn" data-sides="20">d20</button>
+                <div id="diceResult" style="margin-left:auto;font-weight:700"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px;display:flex;gap:8px;">
+              <div class="panel-card" style="flex:1">
+                <label>Заклинания / Фокусы (поиск)</label>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                  <input id="spellSearch" type="text" placeholder="Поиск заклинания..." />
+                  <button id="spellSearchBtn">Поиск</button>
+                </div>
+                <div id="spellResults" class="list" style="margin-top:8px"></div>
+                <div style="margin-top:8px">
+                  <label>Выбранные заклинания</label>
+                  <div id="chosenSpells" class="selected-list"></div>
+                </div>
+              </div>
+
+              <div class="panel-card" style="width:220px">
+                <label>Эффекты (поиск)</label>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                  <input id="effectSearch" type="text" placeholder="Поиск эффекта..." />
+                  <button id="effectSearchBtn">Поиск</button>
+                </div>
+                <div id="effectResults" class="list" style="margin-top:8px"></div>
+                <div style="margin-top:8px">
+                  <label>Выбранные эффекты</label>
+                  <div id="chosenEffects" class="selected-list"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <aside class="sidebar">
+            <div class="panel-card avatar-wrap">
+              <label>Аватар (загрузить или рисовать)</label>
+              <canvas id="avatarCanvas" width="400" height="400"></canvas>
+              <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap;">
+                <input id="avatarFile" type="file" accept="image/*">
+                <button id="drawModeBtn">Рисовать</button>
+                <button id="clearAvatarBtn">Очистить</button>
+                <button id="downloadAvatarBtn">Скачать аватар</button>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
+                <label>Кисть</label>
+                <input id="brushSize" type="range" min="1" max="24" value="4">
+                <label style="margin-left:auto">Цвет</label>
+                <input id="brushColor" type="color" value="#ffffff">
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <label>Классы / Подклассы / Раса</label>
+              <div style="display:flex; gap:6px;">
+                <div style="flex:1">
+                  <div style="font-size:12px;color:var(--muted)">Класс</div>
+                  <select id="classSideSelect"></select>
+                </div>
+                <div style="flex:1">
+                  <div style="font-size:12px;color:var(--muted)">Подкласс</div>
+                  <select id="subclassSideSelect"></select>
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                <div style="font-size:12px;color:var(--muted)">Раса</div>
+                <select id="raceSideSelect"></select>
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>Сохранённые поля</div>
+                <div class="muted-note">JSON</div>
+              </div>
+              <div style="margin-top:8px" id="quickJsonPreview" class="muted-note">—</div>
+            </div>
+
+            <div class="panel-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>Слушатели поиска</div>
+                <div style="font-size:13px;color:var(--muted)">для диагностики</div>
+              </div>
+              <div id="logConsole" style="margin-top:6px; font-size:12px; color:var(--muted); max-height:12vh; overflow:auto;"></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel-card">
+          <label>База классов</label>
+          <div id="classesList" class="list"></div>
+        </div>
+
+        <div class="panel-card">
+          <label>База рас</label>
+          <div id="racesList" class="list"></div>
+        </div>
+
+        <div class="panel-card">
+          <label>База предметов</label>
+          <div id="itemsList" class="list"></div>
+        </div>
+
+        <div class="panel-card">
+          <label>База эффектов</label>
+          <div id="effectsList" class="list"></div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
-<div class="section">
-    <h2>Навыки</h2>
-    <div class="skills">
-        <label>Атлетика <input type="checkbox" id="athletics"></label>
-        <label>Акробатика <input type="checkbox" id="acrobatics"></label>
-        <label>Ловкость рук <input type="checkbox" id="sleight_of_hand"></label>
-        <label>Скрытность <input type="checkbox" id="stealth"></label>
-        <label>Анализ <input type="checkbox" id="investigation"></label>
-        <label>История <input type="checkbox" id="history"></label>
-        <label>Магия <input type="checkbox" id="arcana"></label>
-        <label>Природа <input type="checkbox" id="nature"></label>
-        <label>Религия <input type="checkbox" id="religion"></label>
-        <label>Внимательность <input type="checkbox" id="perception"></label>
-        <label>Выживание <input type="checkbox" id="survival"></label>
-        <label>Медицина <input type="checkbox" id="medicine"></label>
-        <label>Проницательность <input type="checkbox" id="insight"></label>
-        <label>Выступление <input type="checkbox" id="performance"></label>
-        <label>Запугивание <input type="checkbox" id="intimidation"></label>
-        <label>Обман <input type="checkbox" id="deception"></label>
-        <label>Убеждение <input type="checkbox" id="persuasion"></label>
+<!-- modal -->
+<div id="modal" class="modal">
+  <div class="window">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div id="modalTitle" style="font-weight:700"></div>
+      <div><button id="modalClose">Закрыть</button></div>
     </div>
+    <div id="modalBody" style="margin-top:8px"></div>
+  </div>
 </div>
 
-<div class="section">
-    <h2>Черты, идеалы, привязанности, слабости</h2>
-    <label>Черты характера: <textarea id="traits"></textarea></label>
-    <label>Идеалы: <textarea id="ideals"></textarea></label>
-    <label>Привязанности: <textarea id="bonds"></textarea></label>
-    <label>Слабости: <textarea id="flaws"></textarea></label>
-</div>
-
-<div class="section">
-    <h2>Заклинания</h2>
-    <label>Количество ячеек: <input type="number" id="spell_slots" min="0"></label>
-    <label>Использовано: <input type="number" id="used_spell_slots" min="0"></label>
-</div>
-
-<div class="section">
-    <h2>Инвентарь</h2>
-    <label>Предметы: <textarea id="items"></textarea></label>
-</div>
-
-<div class="section">
-    <h2>Броски кубиков</h2>
-    <div class="flex">
-        <div>
-            <label>d4: <input type="number" id="dice_d4" min="1" value="1"></label>
-            <button onclick="rollDice('d4')">Бросить</button>
-            <div class="dice-result" id="result_d4"></div>
-        </div>
-        <div>
-            <label>d6: <input type="number" id="dice_d6" min="1" value="1"></label>
-            <button onclick="rollDice('d6')">Бросить</button>
-            <div class="dice-result" id="result_d6"></div>
-        </div>
-        <div>
-            <label>d8: <input type="number" id="dice_d8" min="1" value="1"></label>
-            <button onclick="rollDice('d8')">Бросить</button>
-            <div class="dice-result" id="result_d8"></div>
-        </div>
-        <div>
-            <label>d12: <input type="number" id="dice_d12" min="1" value="1"></label>
-            <button onclick="rollDice('d12')">Бросить</button>
-            <div class="dice-result" id="result_d12"></div>
-        </div>
-        <div>
-            <label>d20: <input type="number" id="dice_d20" min="1" value="1"></label>
-            <button onclick="rollDice('d20')">Бросить</button>
-            <div class="dice-result" id="result_d20"></div>
-        </div>
-    </div>
-</div>
-
-<div class="section">
-    <button onclick="saveCharacter()">Сохранить JSON</button>
-    <button onclick="loadCharacter()">Загрузить JSON</button>
-    <input type="file" id="jsonFile" style="display:none" onchange="handleFile(event)">
-</div>
-
-<script>
-function rollDice(dice) {
-    const num = parseInt(document.getElementById('dice_' + dice).value) || 1;
-    let sides = parseInt(dice.replace('d',''));
-    let total = 0;
-    for (let i = 0; i < num; i++) total += Math.floor(Math.random()*sides)+1;
-    document.getElementById('result_' + dice).textContent = total;
-}
-
-function getCharacterData() {
-    return {
-        name: document.getElementById('name').value,
-        class: document.getElementById('class').value,
-        subclass: document.getElementById('subclass').value,
-        hp: document.getElementById('hp').value,
-        mana: document.getElementById('mana').value,
-        ac: document.getElementById('ac').value,
-        initiative: document.getElementById('initiative').value,
-        speed: document.getElementById('speed').value,
-        passive_perception: document.getElementById('passive_perception').value,
-        money: document.getElementById('money').value,
-        stats: {
-            strength: document.getElementById('strength').value,
-            dexterity: document.getElementById('dexterity').value,
-            constitution: document.getElementById('constitution').value,
-            intelligence: document.getElementById('intelligence').value,
-            wisdom: document.getElementById('wisdom').value,
-            charisma: document.getElementById('charisma').value
-        },
-        skills: {
-            athletics: document.getElementById('athletics').checked,
-            acrobatics: document.getElementById('acrobatics').checked,
-            sleight_of_hand: document.getElementById('sleight_of_hand').checked,
-            stealth: document.getElementById('stealth').checked,
-            investigation: document.getElementById('investigation').checked,
-            history: document.getElementById('history').checked,
-            arcana: document.getElementById('arcana').checked,
-            nature: document.getElementById('nature').checked,
-            religion: document.getElementById('religion').checked,
-            perception: document.getElementById('perception').checked,
-            survival: document.getElementById('survival').checked,
-            medicine: document.getElementById('medicine').checked,
-            insight: document.getElementById('insight').checked,
-            performance: document.getElementById('performance').checked,
-            intimidation: document.getElementById('intimidation').checked,
-            deception: document.getElementById('deception').checked,
-            persuasion: document.getElementById('persuasion').checked
-        },
-        traits: document.getElementById('traits').value,
-        ideals: document.getElementById('ideals').value,
-        bonds: document.getElementById('bonds').value,
-        flaws: document.getElementById('flaws').value,
-        spell_slots: document.getElementById('spell_slots').value,
-        used_spell_slots: document.getElementById('used_spell_slots').value,
-        items: document.getElementById('items').value
-    };
-}
-
-function saveCharacter() {
-    const data = JSON.stringify(getCharacterData(), null, 2);
-    const blob = new Blob([data], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'character.json';
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-function loadCharacter() {
-    document.getElementById('jsonFile').click();
-}
-
-function handleFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const data = JSON.parse(e.target.result);
-        populateCharacter(data);
-    }
-    reader.readAsText(file);
-}
-
-function populateCharacter(data) {
-    document.getElementById('name').value = data.name || '';
-    document.getElementById('class').value = data.class || '';
-    document.getElementById('subclass').value = data.subclass || '';
-    document.getElementById('hp').value = data.hp || '';
-    document.getElementById('mana').value = data.mana || '';
-    document.getElementById('ac').value = data.ac || '';
-    document.getElementById('initiative').value = data.initiative || '';
-    document.getElementById('speed').value = data.speed || '';
-    document.getElementById('passive_perception').value = data.passive_perception || '';
-    document.getElementById('money').value = data.money || '';
-    
-    if(data.stats){
-        document.getElementById('strength').value = data.stats.strength || '';
-        document.getElementById('dexterity').value = data.stats.dexterity || '';
-        document.getElementById('constitution').value = data.stats.constitution || '';
-        document.getElementById('intelligence').value = data.stats.intelligence || '';
-        document.getElementById('wisdom').value = data.stats.wisdom || '';
-        document.getElementById('charisma').value = data.stats.charisma || '';
-    }
-
-    if(data.skills){
-        for(let skill in data.skills){
-            if(document.getElementById(skill)) document.getElementById(skill).checked = data.skills[skill];
-        }
-    }
-
-    document.getElementById('traits').value = data.traits || '';
-    document.getElementById('ideals').value = data.ideals || '';
-    document.getElementById('bonds').value = data.bonds || '';
-    document.getElementById('flaws').value = data.flaws || '';
-    document.getElementById('spell_slots').value = data.spell_slots || '';
-    document.getElementById('used_spell_slots').value = data.used_spell_slots || '';
-    document.getElementById('items').value = data.items || '';
-}
-</script>
-
+<!-- подключаем основной скрипт -->
+<script src="app.js"></script>
 </body>
 </html>
