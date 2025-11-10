@@ -203,7 +203,7 @@
                   <input id="currentHP" type="text" />
                 </div>
                 <div style="width:120px">
-                  <label>Класс брони</label>
+                  <label>AC</label>
                   <input id="ac" type="text" />
                 </div>
                 <div style="width:120px">
@@ -431,7 +431,7 @@ fetch('https://yourdomain.com/data/spells.json').then(r=>r.json()).then(arr => {
 -------------------------*/
 const state = {
   character: {
-    name:'', classId:'', subclassId:'', level:1, race:'', stats:{:10,DEX:10,CON:10,INT:10,WIS:10,CHA:10},
+    name:'', classId:'', subclassId:'', level:1, race:'', stats:{STR:10,DEX:10,CON:10,INT:10,WIS:10,CHA:10},
     hp:0, ac:10, init:0, spells:[], items:[], effects:[], skills:[]
   },
   drawing:false
@@ -499,7 +499,7 @@ const quickJsonPreview = document.getElementById('quickJsonPreview');
 -------------------------*/
 function log(msg){
   const el = document.createElement('div');
-  el.textContent = `[${new Date().toLocaleTimeing()}] ${msg}`;
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
   logConsole.prepend(el);
 }
 function download(filename, text){
@@ -545,7 +545,7 @@ function renderRaceOptions(){
   });
 }
 function renderStatBlocks(){
-  const stats = ['','DEX','CON','INT','WIS','CHA'];
+  const stats = ['STR','DEX','CON','INT','WIS','CHA'];
   const container = document.getElementById('statsBlock');
   container.innerHTML = '';
   stats.forEach(s=>{
@@ -590,7 +590,7 @@ function renderChosenSpells(){
     chosenSpells.appendChild(div);
   });
   document.querySelectorAll('.removeSpell').forEach(b=>b.onclick=(e)=>{ const i=+e.target.dataset.idx; state.character.spells.splice(i,1); renderChosenSpells(); syncQuickPreview(); });
-  document.querySelectorAll('.spellInfo').forEach(b=>b.onclick=(e)=>{ const i=+e.target.dataset.idx; const sp=state.character.spells[i]; openModal(sp.name, `<ong>Школа:</ong> ${sp.school||'-'}<br><ong>Уровень:</ong> ${sp.level}<hr>${sp.description}`) });
+  document.querySelectorAll('.spellInfo').forEach(b=>b.onclick=(e)=>{ const i=+e.target.dataset.idx; const sp=state.character.spells[i]; openModal(sp.name, `<strong>Школа:</strong> ${sp.school||'-'}<br><strong>Уровень:</strong> ${sp.level}<hr>${sp.description}`) });
 }
 function renderChosenEffects(){
   chosenEffects.innerHTML='';
@@ -623,7 +623,7 @@ function renderSpellSearchResults(list){
   spellResults.innerHTML='';
   list.forEach(s=>{
     const row=document.createElement('div'); row.className='item';
-    row.innerHTML = `<div><ong>${s.name}</ong><div style="font-size:12px;color:var(--muted)">${s.school||''} • уровень ${s.level}</div></div><div class="meta"><label><input type="checkbox" data-spell="${s.id}" ${state.character.spells.some(x=>x.id===s.id)?'checked':''}/>Добавить</label><button data-spell="${s.id}" class="inspectSpell">i</button></div>`;
+    row.innerHTML = `<div><strong>${s.name}</strong><div style="font-size:12px;color:var(--muted)">${s.school||''} • уровень ${s.level}</div></div><div class="meta"><label><input type="checkbox" data-spell="${s.id}" ${state.character.spells.some(x=>x.id===s.id)?'checked':''}/>Добавить</label><button data-spell="${s.id}" class="inspectSpell">i</button></div>`;
     spellResults.appendChild(row);
   });
   // checkbox handlers
@@ -640,14 +640,14 @@ function renderSpellSearchResults(list){
       renderChosenSpells(); syncQuickPreview();
     };
   });
-  document.querySelectorAll('.inspectSpell').forEach(b=>b.onclick=(e)=>{ const id=e.target.dataset.spell; const sp=spells.find(x=>x.id===id); if(sp) openModal(sp.name, `<ong>Школа:</ong> ${sp.school||'-'}<br><ong>Уровень:</ong> ${sp.level}<hr>${sp.description}`) });
+  document.querySelectorAll('.inspectSpell').forEach(b=>b.onclick=(e)=>{ const id=e.target.dataset.spell; const sp=spells.find(x=>x.id===id); if(sp) openModal(sp.name, `<strong>Школа:</strong> ${sp.school||'-'}<br><strong>Уровень:</strong> ${sp.level}<hr>${sp.description}`) });
 }
 
 function renderEffectSearchResults(list){
   effectResults.innerHTML='';
   list.forEach(s=>{
     const row=document.createElement('div'); row.className='item';
-    row.innerHTML = `<div><ong>${s.name}</ong><div style="font-size:12px;color:var(--muted)">${s.descr? s.descr.slice(0,60)+'…':''}</div></div><div class="meta"><label><input type="checkbox" data-effect="${s.id}" ${state.character.effects.some(x=>x.id===s.id)?'checked':''}/>Добавить</label><button data-effect="${s.id}" class="inspectEffectBtn">i</button></div>`;
+    row.innerHTML = `<div><strong>${s.name}</strong><div style="font-size:12px;color:var(--muted)">${s.descr? s.descr.slice(0,60)+'…':''}</div></div><div class="meta"><label><input type="checkbox" data-effect="${s.id}" ${state.character.effects.some(x=>x.id===s.id)?'checked':''}/>Добавить</label><button data-effect="${s.id}" class="inspectEffectBtn">i</button></div>`;
     effectResults.appendChild(row);
   });
   document.querySelectorAll('input[type="checkbox"][data-effect]').forEach(cb=>{
@@ -757,7 +757,7 @@ saveJsonBtn.onclick = ()=>{
       long: document.getElementById('longNote').value
     }
   };
-  download('character.json', JSON.ingify(exportObj, null, 2));
+  download('character.json', JSON.stringify(exportObj, null, 2));
 };
 
 loadJson.onchange = (e)=>{
@@ -791,7 +791,7 @@ loadJson.onchange = (e)=>{
 /* clear sheet */
 clearBtn.onclick = ()=>{
   if(!confirm('Очистить лист персонажа?')) return;
-  state.character = {name:'', classId:'', subclassId:'', level:1, race:'', stats:{Сила:10,Ловкость:10,Выносливость:10,Интеллект:10,Мудрость:10,Харизма:10}, hp:0, ac:10, init:0, spells:[], items:[], effects:[], skills:[]};
+  state.character = {name:'', classId:'', subclassId:'', level:1, race:'', stats:{STR:10,DEX:10,CON:10,INT:10,WIS:10,CHA:10}, hp:0, ac:10, init:0, spells:[], items:[], effects:[], skills:[]};
   document.getElementById('charName').value='';
   document.getElementById('shortNote').value='';
   document.getElementById('longNote').value='';
