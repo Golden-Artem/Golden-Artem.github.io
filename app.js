@@ -1,142 +1,119 @@
-// === НАСТРОЙКА ПУТЕЙ К JSON ===
 const files = {
-  spells: 'data/spells.json',
-  items: 'data/items.json',
-  classes: 'data/classes.json',
-  subclasses: 'data/subclasses.json',
-  races: 'data/races.json',
-  effects: 'data/effects.json'
+  spells: '/data/spells.json',
+  items: '/data/items.json',
+  classes: '/data/classes.json',
+  subclasses: '/data/subclasses.json',
+  races: '/data/races.json',
+  effects: '/data/effects.json'
 };
 
-let dataCache = {};
-let currentTab = 'spells';
+let data = {};
 
-// === УНИВЕРСАЛЬНАЯ ЗАГРУЗКА JSON ===
-async function loadFile(key) {
-  if (dataCache[key]) return dataCache[key];
-  try {
-    const resp = await fetch(files[key]);
-    if (!resp.ok) throw new Error(`Ошибка загрузки ${files[key]}: ${resp.status}`);
-    const json = await resp.json();
-    dataCache[key] = json;
-    return json;
-  } catch (err) {
-    console.error(err);
-    dataCache[key] = {};
-    return {};
-  }
+// === ЗАГРУЗКА JSON ===
+async function loadJSON(path) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`Ошибка загрузки ${path}`);
+  return await res.json();
 }
 
-// === ИНИЦИАЛИЗАЦИЯ ===
-document.addEventListener('DOMContentLoaded', async () => {
-  // Навигация по вкладкам
-  document.querySelectorAll('.tab').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-      btn.classList.add('active');
-      currentTab = btn.dataset.type;
-      await renderList();
+async function loadData() {
+  for (let [key, path] of Object.entries(files)) {
+    try {
+      data[key] = await loadJSON(path);
+    } catch (e) {
+      console.warn("Не удалось загрузить", key, e);
+      data[key] = [];
+    }
+  }
+  populateSelectors();
+}
+
+// === НАПОЛНЕНИЕ СПИСКОВ ===
+function populateSelectors() {
+  const raceSel = document.getElementById("raceSelect");
+  const classSel = document.getElementById("classSelect");
+  const subclassSel = document.getElementById("subclassSelect");
+
+  raceSel.innerHTML = `<option value="">— Выберите расу —</option>`;
+  data.races.forEach(r => {
+    raceSel.innerHTML += `<option value="${r.name}">${r.name}</option>`;
+  });
+
+  classSel.innerHTML = `<option value="">— Выберите класс —</option>`;
+  data.classes.forEach(c => {
+    classSel.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+  });
+
+  classSel.addEventListener("change", () => {
+    const selected = classSel.value;
+    const filtered = data.subclasses.filter(s => s.parent === selected);
+    subclassSel.innerHTML = `<option value="">— Выберите подкласс —</option>`;
+    filtered.forEach(s => {
+      subclassSel.innerHTML += `<option value="${s.name}">${s.name}</option>`;
     });
   });
+}
 
-  // Поиск
-  document.getElementById('globalSearch').addEventListener('input', renderList);
-
-  // Закрытие модального окна
-  document.getElementById('closeModal').addEventListener('click', () => {
-    document.getElementById('modal').classList.add('hidden');
-  });
-
-  // Подгружаем все файлы при запуске
-  await Promise.all(Object.keys(files).map(loadFile));
-
-  console.log('✅ Все JSON файлы загружены', dataCache);
-  await renderList();
+// === СОХРАНЕНИЕ ===
+document.getElementById("saveBtn").addEventListener("click", () => {
+  const character = {
+    name: document.getElementById("charName").value,
+    race: document.getElementById("raceSelect").value,
+    class: document.getElementById("classSelect").value,
+    subclass: document.getElementById("subclassSelect").value,
+    level: document.getElementById("charLevel").value,
+    stats: {
+      str: str.value, dex: dex.value, con: con.value, int: int.value, wis: wis.value, cha: cha.value
+    },
+    ac: ac.value,
+    initiative: initiative.value,
+    inventory: inventory.value,
+    money: {
+      cp: cp.value, sp: sp.value, gp: gp.value, pp: pp.value, ep: ep.value
+    }
+  };
+  const blob = new Blob([JSON.stringify(character, null, 2)], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${character.name || 'персонаж'}.json`;
+  link.click();
 });
 
-// === ОТОБРАЖЕНИЕ СПИСКА ===
-async function renderList() {
-  await loadFile(currentTab);
-  const obj = dataCache[currentTab] || {};
-  const arr = Object.values(obj);
-  const q = document.getElementById('globalSearch').value.trim().toLowerCase();
-  const list = document.getElementById('list');
-  list.innerHTML = '';
+// === ЗАГРУЗКА ===
+document.getElementById("loadBtn").addEventListener("click", () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const char = JSON.parse(ev.target.result);
+      document.getElementById("charName").value = char.name || "";
+      document.getElementById("raceSelect").value = char.race || "";
+      document.getElementById("classSelect").value = char.class || "";
+      document.getElementById("subclassSelect").value = char.subclass || "";
+      document.getElementById("charLevel").value = char.level || 1;
+      for (let k in char.stats) document.getElementById(k).value = char.stats[k];
+      ac.value = char.ac || 10;
+      initiative.value = char.initiative || 0;
+      inventory.value = char.inventory || "";
+      if (char.money) for (let m in char.money) document.getElementById(m).value = char.money[m];
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+});
 
-  const filtered = arr.filter(it => {
-    if (!q) return true;
-    return (
-      (it.name || '').toLowerCase().includes(q) ||
-      (it.tags || []).join(' ').toLowerCase().includes(q) ||
-      (it.description || '').toLowerCase().includes(q)
-    );
-  });
-
-  if (filtered.length === 0) {
-    list.innerHTML = '<p style="grid-column:1/-1;color:#bbb">Ничего не найдено.</p>';
-    return;
+// === ОЧИСТКА ===
+document.getElementById("clearBtn").addEventListener("click", () => {
+  if (confirm("Очистить лист персонажа?")) {
+    document.querySelectorAll("input, textarea, select").forEach(e => {
+      if (e.type === "number") e.value = 0;
+      else e.value = "";
+    });
   }
+});
 
-  filtered.forEach(it => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <h3>${it.name}</h3>
-      <div class="meta">${it.tags ? it.tags.join(', ') : ''}</div>
-      <div style="margin-top:8px;color:#ccc;font-size:13px">${shortSummary(it)}</div>
-    `;
-    card.addEventListener('click', () => openModal(currentTab, it.id));
-    list.appendChild(card);
-  });
-}
-
-// === КОРОТКОЕ ОПИСАНИЕ ДЛЯ КАРТОЧКИ ===
-function shortSummary(it) {
-  switch (currentTab) {
-    case 'spells':
-      return `${it.level} уровень — ${it.school || ''} — ${it.classes ? it.classes.join(', ') : ''}`;
-    case 'items':
-      return `${it.type || ''} — ${it.rarity || ''}`;
-    case 'classes':
-      return `Класс — ${it.primary_ability ? it.primary_ability.join(', ') : ''}`;
-    case 'races':
-      return `Скорость: ${it.speed || '-'} клеток`;
-    case 'effects':
-      return `Тип: ${it.effect_type || ''}`;
-    default:
-      return '';
-  }
-}
-
-// === ОТКРЫТИЕ МОДАЛКИ ===
-async function openModal(type, id) {
-  await loadFile(type);
-  const item = dataCache[type][id];
-  const modal = document.getElementById('modal');
-  const content = document.getElementById('modalContent');
-
-  if (!item) {
-    content.innerHTML = '<p>Не найдено</p>';
-  } else {
-    let html = `<h2>${item.name}</h2>`;
-    if (item.source) html += `<div style="color:#aaa;font-size:12px;">${item.source}</div>`;
-
-    if (type === 'spells') {
-      html += `
-        <p><strong>Уровень:</strong> ${item.level} <strong>Школа:</strong> ${item.school || ''}<br/>
-        <strong>Время накладывания:</strong> ${item.casting_time || ''} <strong>Дистанция:</strong> ${item.range || ''}</p>
-      `;
-    } else if (type === 'items') {
-      html += `<p><strong>Тип:</strong> ${item.type || ''} <strong>Редкость:</strong> ${item.rarity || ''}</p>`;
-    } else if (type === 'classes') {
-      html += `<p><strong>Основная характеристика:</strong> ${item.primary_ability?.join(', ') || '-'}</p>`;
-    } else if (type === 'races') {
-      html += `<p><strong>Скорость:</strong> ${item.speed || '-'} клеток</p>`;
-    }
-
-    if (item.description) html += `<div>${item.description}</div>`;
-    content.innerHTML = html;
-  }
-
-  modal.classList.remove('hidden');
-}
+document.addEventListener("DOMContentLoaded", loadData);
