@@ -247,50 +247,26 @@ function renderStatBlocks(){
 }
 
 function renderIndexLists(){
-  classListDiv.innerHTML='';
-  classes.forEach(c=>{
-    const d=document.createElement('div');
-    d.className='item';
-    d.innerHTML=`<div>${c.name}</div><div class="meta"><button data-class="${c.id}" class="inspectClass">i</button></div>`;
-    classListDiv.appendChild(d);
+  refs.classesList.innerHTML=''; classes.forEach(c=>{
+    const d=document.createElement('div'); d.className='item';
+    d.innerHTML = `<div>${c.name}</div><div class="meta"><button data-class="${c.id}" class="inspectClass">i</button></div>`;
+    refs.classesList.appendChild(d);
   });
-
-  racesListDiv.innerHTML='';
-  races.forEach(r=>{
-    const d=document.createElement('div');
-    d.className='item';
-    d.innerHTML=`<div>${r.name}</div><div class="meta"><button data-race="${r.id}" class="inspectRace">i</button></div>`;
-    racesListDiv.appendChild(d);
+  refs.racesList.innerHTML=''; races.forEach(r=>{
+    const d=document.createElement('div'); d.className='item';
+    d.innerHTML = `<div>${r.name}</div><div class="meta"><button data-race="${r.id}" class="inspectRace">i</button></div>`;
+    refs.racesList.appendChild(d);
   });
-
-  itemsListDiv.innerHTML='';
-  items.forEach(it=>{
-    const d=document.createElement('div');
-    d.className='item';
-    d.innerHTML=`<div>${it.name}</div><div class="meta"><button data-item="${it.id}" class="inspectItem">i</button></div>`;
-    itemsListDiv.appendChild(d);
+  refs.itemsList.innerHTML=''; items.forEach(it=>{
+    const d=document.createElement('div'); d.className='item';
+    d.innerHTML = `<div>${it.name}</div><div class="meta"><button data-item="${it.id}" class="inspectItem">i</button></div>`;
+    refs.itemsList.appendChild(d);
   });
-
-  effectsListDiv.innerHTML='';
-  effects.forEach(it=>{
-    const d=document.createElement('div');
-    d.className='item';
-    d.innerHTML=`<div>${it.name}</div><div class="meta"><button data-effect="${it.id}" class="inspectEffect">i</button></div>`;
-    effectsListDiv.appendChild(d);
+  refs.effectsList.innerHTML=''; effects.forEach(it=>{
+    const d=document.createElement('div'); d.className='item';
+    d.innerHTML = `<div>${it.name}</div><div class="meta"><button data-effect="${it.id}" class="inspectEffect">i</button></div>`;
+    refs.effectsList.appendChild(d);
   });
-
-  // база подклассов
-  const subclassesListDiv = document.getElementById('subclassesList');
-  subclassesListDiv.innerHTML='';
-  for (const [clsId, list] of Object.entries(subclasses)) {
-    list.forEach(sub=>{
-      const d=document.createElement('div');
-      d.className='item';
-      d.innerHTML=`<div>${sub.name}</div>
-      <div class="meta"><button data-subclass="${clsId}:${sub.id}" class="inspectSubclass">i</button></div>`;
-      subclassesListDiv.appendChild(d);
-    });
-  }
 }
 
 /* chosen lists */
