@@ -209,13 +209,38 @@
   ],
     "Druid": [
     {
-      "id": "",
-      "name": "",
+      "id": "Circle_of_the_Earth",
+      "name": "Круг земли",
       "desc": ""
     },
     {
-      "id": "",
-      "name": "",
+      "id": "Circle_of_the_Moon",
+      "name": "Круг луны",
+      "desc": ""
+    },
+    {
+      "id": "Shepherd's_Circle",
+      "name": "Круг пастыря",
+      "desc": ""
+    },
+    {
+      "id": "Circle_of_Dreams",
+      "name": "Круг снов",
+      "desc": ""
+    },
+    {
+      "id": "Wildfire_Circle",
+      "name": "Круг дикого огня",
+      "desc": ""
+    },
+    {
+      "id": "Circle_of_stars",
+      "name": "Круг звёзд",
+      "desc": ""
+    },
+    {
+      "id": "Circle_of_disputes",
+      "name": "Круг спор",
       "desc": ""
     }
   ],
