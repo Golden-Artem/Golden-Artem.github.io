@@ -244,15 +244,144 @@
       "desc": ""
     }
   ],
-      "": [
+      "Cleric": [
     {
-      "id": "",
-      "name": "",
+      "id": "Storm_Domain",
+      "name": "Домен бури",
       "desc": ""
     },
     {
-      "id": "",
-      "name": "",
+      "id": "Domain_of_War",
+      "name": "Домен войны",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Life",
+      "name": "Домен жизни",
+      "desc": ""
+    },
+    {
+      "id": "Knowledge_Domain",
+      "name": "Домен знаний",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Deception",
+      "name": "Домен обмана",
+      "desc": ""
+    },
+    {
+      "id": "Nature_Domain",
+      "name": "Домен природы",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Light",
+      "name": "Домен света",
+      "desc": ""
+    },
+    {
+      "id": "Death_Domain",
+      "name": "Домен смерти",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Magic",
+      "name": "Домен магии",
+      "desc": ""
+    },
+    {
+      "id": "Forge_Domain",
+      "name": "Домен кузни",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Rest",
+      "name": "Домен упокоения",
+      "desc": ""
+    },
+    {
+      "id": "Peace_Domain",
+      "name": "Домен мира",
+      "desc": ""
+    },
+    {
+      "id": "Order_domain",
+      "name": "Домен порядка",
+      "desc": ""
+    },
+    {
+      "id": "Twilight_Domain",
+      "name": "Домен сумерек",
+      "desc": ""
+    }
+  ],
+      "Artificer": [
+    {
+      "id": "alhimik",
+      "name": "Алхимик",
+      "desc": ""
+    },
+    {
+      "id": "Artilleryman",
+      "name": "Артиллерист",
+      "desc": ""
+    },
+    {
+      "id": "Battle_Blacksmith",
+      "name": "Боевой кузнец",
+      "desc": ""
+    },
+    {
+      "id": "Bronnik",
+      "name": "Бронник",
+      "desc": ""
+    }
+  ],
+      "Warlock": [
+    {
+      "id": "Archfey",
+      "name": "Архифея",
+      "desc": ""
+    },
+    {
+      "id": "Eshadie",
+      "name": "Исчадие",
+      "desc": ""
+    },
+    {
+      "id": "Great_Ancient_One",
+      "name": "Великий Древний",
+      "desc": ""
+    },
+      {
+      "id": "Immortal",
+      "name": "Бессмертный",
+      "desc": ""
+    },
+      {
+      "id": "Witchblade",
+      "name": "Ведьмовской клинок",
+      "desc": ""
+    },
+      {
+      "id": "Celestial",
+      "name": "Небожитель",
+      "desc": ""
+    },
+      {
+      "id": "Bottomless",
+      "name": "Бездонный",
+      "desc": ""
+    },
+      {
+      "id": "Genius",
+      "name": "Гений",
+      "desc": ""
+    },
+    {
+      "id": "Undead",
+      "name": "Нежить",
       "desc": ""
     }
   ],
@@ -268,7 +397,7 @@
       "desc": ""
     }
   ],
-      "": [
+        "": [
     {
       "id": "",
       "name": "",
@@ -280,6 +409,31 @@
       "desc": ""
     }
   ],
+        "": [
+    {
+      "id": "",
+      "name": "",
+      "desc": ""
+    },
+    {
+      "id": "",
+      "name": "",
+      "desc": ""
+    }
+  ],
+        "": [
+    {
+      "id": "",
+      "name": "",
+      "desc": ""
+    },
+    {
+      "id": "",
+      "name": "",
+      "desc": ""
+    }
+  ],
+  
   "rogue": [
     {
       "id": "thief",
