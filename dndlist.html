@@ -272,12 +272,13 @@
               <div style="display:flex; gap:6px;">
                 <div style="flex:1">
                   <div style="font-size:12px;color:var(--muted)">Класс</div>
-                  <select id="classSideSelect"></select>
+                  <select id="classSideSelect" style="width:100%;"></select>
                 </div>
                 <div style="flex:1">
                   <div style="font-size:12px;color:var(--muted)">Подкласс</div>
-                  <select id="subclassSideSelect"></select>
+                  <select id="subclassSideSelect" style="width:100%; white-space:normal; word-wrap:break-word;"></select>
                 </div>
+              </div>
               </div>
               <div style="margin-top:8px;">
                 <div style="font-size:12px;color:var(--muted)">Раса</div>
@@ -308,6 +309,10 @@
         <div class="panel-card">
           <label>База классов</label>
           <div id="classesList" class="list"></div>
+        </div>
+        <div class="panel-card">
+          <label>База подклассов </label>
+          <div id="subclassesList" class="list"></div>
         </div>
 
         <div class="panel-card">
