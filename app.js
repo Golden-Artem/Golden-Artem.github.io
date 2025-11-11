@@ -497,7 +497,10 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       const id=e.target.dataset.item; const c=items.find(x=>x.id===id); if(c) openModal(c.name, c.descr || '');
     } else if(e.target.matches('.inspectEffect')){
       const id=e.target.dataset.effect; const c=effects.find(x=>x.id===id); if(c) openModal(c.name, c.descr || '');
-    }
+    } else if(e.target.matches('.inspectSubclass')){
+    const [clsId, subId] = e.target.dataset.subclass.split(':');
+    const sub = subclasses[clsId]?.find(x=>x.id===subId);
+    if(sub) openModal(`${sub.name} (${classes.find(c=>c.id===clsId)?.name || '—'})`, sub.desc || 'Без описания');
   });
 
   refs.modalClose.onclick = closeModal;
