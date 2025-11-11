@@ -250,22 +250,57 @@
           </div>
 
           <aside class="sidebar">
-            <div class="panel-card avatar-wrap">
-              <label>Аватар (загрузить или рисовать)</label>
-              <canvas id="avatarCanvas" width="400" height="400"></canvas>
-              <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap;">
-                <input id="avatarFile" type="file" accept="image/*">
-                <button id="drawModeBtn">Рисовать</button>
-                <button id="clearAvatarBtn">Очистить</button>
-                <button id="downloadAvatarBtn">Скачать аватар</button>
-              </div>
-              <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
-                <label>Кисть</label>
-                <input id="brushSize" type="range" min="1" max="24" value="4">
-                <label style="margin-left:auto">Цвет</label>
-                <input id="brushColor" type="color" value="#ffffff">
-              </div>
-            </div>
+  <div class="panel-card avatar-wrap">
+    <label>Аватар (загрузить или рисовать)</label>
+    <canvas id="avatarCanvas" width="400" height="400"></canvas>
+    <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap;">
+      <input id="avatarFile" type="file" accept="image/*">
+      <button id="drawModeBtn">Рисовать</button>
+      <button id="clearAvatarBtn">Очистить</button>
+      <button id="downloadAvatarBtn">Скачать аватар</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
+      <label>Кисть</label>
+      <input id="brushSize" type="range" min="1" max="24" value="4">
+      <label style="margin-left:auto">Цвет</label>
+      <input id="brushColor" type="color" value="#ffffff">
+    </div>
+  </div>
+  <div class="panel-card">
+    <label>Классы / Подклассы / Раса</label>
+    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:120px;">
+        <div style="font-size:12px;color:var(--muted)">Класс</div>
+        <select id="classSideSelect" style="width:100%;"></select>
+      </div>
+      <div style="flex:1; min-width:120px;">
+        <div style="font-size:12px;color:var(--muted)">Подкласс</div>
+        <select id="subclassSideSelect" style="width:100%; white-space:normal; word-wrap:break-word;"></select>
+      </div>
+      <div style="flex:1; min-width:120px;">
+        <div style="font-size:12px;color:var(--muted)">Раса</div>
+        <select id="raceSideSelect" style="width:100%;"></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>Сохранённые поля</div>
+      <div class="muted-note">JSON</div>
+    </div>
+    <div style="margin-top:8px" id="quickJsonPreview" class="muted-note">—</div>
+  </div>
+
+  <div class="panel-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>Консоль</div>
+      <div style="font-size:13px;color:var(--muted)">для диагностики</div>
+    </div>
+    <div id="logConsole" style="margin-top:6px; font-size:12px; color:var(--muted); max-height:12vh; overflow:auto;"></div>
+  </div>
+</aside>
+
 
             <div class="panel-card">
               <label>Классы / Подклассы / Раса</label>
