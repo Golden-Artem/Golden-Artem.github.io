@@ -249,7 +249,7 @@
 
           </div>
 
-          <aside class="sidebar">
+         <aside class="sidebar">
   <div class="panel-card avatar-wrap">
     <label>Аватар (загрузить или рисовать)</label>
     <canvas id="avatarCanvas" width="400" height="400"></canvas>
@@ -301,19 +301,17 @@
   </div>
 </aside>
 
-
             <div class="panel-card">
               <label>Классы / Подклассы / Раса</label>
               <div style="display:flex; gap:6px;">
                 <div style="flex:1">
                   <div style="font-size:12px;color:var(--muted)">Класс</div>
-                  <select id="classSideSelect" style="width:100%;"></select>
+                  <select id="classSideSelect"></select>
                 </div>
                 <div style="flex:1">
                   <div style="font-size:12px;color:var(--muted)">Подкласс</div>
-                  <select id="subclassSideSelect" style="width:100%; white-space:normal; word-wrap:break-word;"></select>
+                  <select id="subclassSideSelect"></select>
                 </div>
-              </div>
               </div>
               <div style="margin-top:8px;">
                 <div style="font-size:12px;color:var(--muted)">Раса</div>
@@ -331,7 +329,7 @@
 
             <div class="panel-card">
               <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div>Консоль</div>
+                <div>Слушатели поиска</div>
                 <div style="font-size:13px;color:var(--muted)">для диагностики</div>
               </div>
               <div id="logConsole" style="margin-top:6px; font-size:12px; color:var(--muted); max-height:12vh; overflow:auto;"></div>
@@ -345,6 +343,7 @@
           <label>База классов</label>
           <div id="classesList" class="list"></div>
         </div>
+
         <div class="panel-card">
           <label>База рас</label>
           <div id="racesList" class="list"></div>
@@ -358,10 +357,6 @@
         <div class="panel-card">
           <label>База эффектов</label>
           <div id="effectsList" class="list"></div>
-        </div>
-        <div class="panel-card">
-          <label>База подклассов </label>
-          <div id="subclassesList" class="list"></div>
         </div>
       </div>
     </div>
