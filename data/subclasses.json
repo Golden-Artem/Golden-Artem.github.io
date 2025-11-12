@@ -160,7 +160,7 @@
       "desc": ""
     }
   ],
-  "Barbarian": [
+  "barbarian": [
     {
       "id": "Way_of_the_Berserker",
       "name": "Путь берсерка",
@@ -207,7 +207,7 @@
       "desc": ""
     }
   ],
-    "Druid": [
+    "druid": [
     {
       "id": "Circle_of_the_Earth",
       "name": "Круг земли",
@@ -244,7 +244,7 @@
       "desc": ""
     }
   ],
-      "Cleric": [
+      "cleric": [
     {
       "id": "Storm_Domain",
       "name": "Домен бури",
@@ -316,7 +316,7 @@
       "desc": ""
     }
   ],
-      "Artificer": [
+      "artificer": [
     {
       "id": "alhimik",
       "name": "Алхимик",
@@ -338,7 +338,7 @@
       "desc": ""
     }
   ],
-      "Warlock": [
+      "warlock": [
     {
       "id": "Archfey",
       "name": "Архифея",
@@ -385,7 +385,7 @@
       "desc": ""
     }
   ],
-      "Monk": [
+      "monk": [
     {
       "id": "Path_of_the_Open_Palm",
       "name": "Путь открытой ладони",
@@ -437,7 +437,7 @@
       "desc": ""
     }
   ],
-        "Paladin": [
+        "paladin": [
     {
       "id": "Oath_of_Allegiance",
       "name": "Клятва преданности",
@@ -484,49 +484,7 @@
       "desc": ""
     }
   ],
-        "Ranger": [
-    {
-      "id": "",
-      "name": "Охотник",
-      "desc": ""
-    },
-    {
-      "id": "",
-      "name": "Повелитель зверей",
-      "desc": ""
-    },
-    {
-      "id": "",
-      "name": "Странник горизонта",
-      "desc": ""
-    },
-    {
-      "id": "",
-      "name": "Сумрачный охотник",
-      "desc": ""
-    },
-    {
-      "id": "",
-      "name": "Убийца чудовищ",
-      "desc": ""
-    },
-    {
-      "id": "",
-      "name": "Странник фей",
-      "desc": ""
-    },
-    {
-      "id": "",
-      "name": "Хранитель роя",
-      "desc": ""
-    },
-    {
-      "id": "",
-      "name": "Наездник на дрейке",
-      "desc": ""
-    }
-  ],
-        "Sorcerer": [
+        "ranger": [
     {
       "id": "Hunter",
       "name": "Охотник",
@@ -569,7 +527,7 @@
     }
   ],
   
-        "Sorcerer": [
+        "sorcerer": [
     {
       "id": "Legacy_of_Dragon_Blood",
       "name": "Наследие драконьей крови",
@@ -668,7 +626,7 @@
       "desc": ""
     }
   ],
-        "Stargazer": [
+        "stargazer": [
     {
       "id": "Water_trine",
       "name": "Трин воды",
@@ -690,7 +648,7 @@
       "desc": ""
     }
   ],
-        "Blood hunter": [
+        "bloodhunter": [
     {
       "id": "Order_of_Phantom_Assassins",
       "name": "Орден призрачных убийц",
