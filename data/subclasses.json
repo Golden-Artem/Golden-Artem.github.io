@@ -611,7 +611,7 @@
       "desc": ""
     }
   ],
-        "Sorcerer": [
+        "alchemist": [
     {
       "id": "Amorist",
       "name": "Аморист",
@@ -668,7 +668,7 @@
       "desc": ""
     }
   ],
-        "Sorcerer": [
+        "Stargazer": [
     {
       "id": "Water_trine",
       "name": "Трин воды",
@@ -690,71 +690,71 @@
       "desc": ""
     }
   ],
-        "Sorcerer": [
+        "Blood hunter": [
     {
-      "id": "Water_trine",
-      "name": "Трин воды",
+      "id": "Order_of_Phantom_Assassins",
+      "name": "Орден призрачных убийц",
       "desc": ""
     },
     {
-      "id": "Air_trine",
-      "name": "Трин воздуха",
+      "id": "Order_of_Fel_Souls",
+      "name": "Орден осквернённых душ",
       "desc": ""
     },
     {
-      "id": "Earth_Trine",
-      "name": "Трин земли",
+      "id": "Order_of_Mutants",
+      "name": "Орден мутантов",
       "desc": ""
     },
     {
-      "id": "Trine_of_Fire",
-      "name": "Трин огня",
+      "id": "Order_of_Lycanthropes",
+      "name": "Орден ликантропов",
       "desc": ""
     }
   ],
   "rogue": [
     {
-      "id": "",
+      "id": "thief",
       "name": "Вор",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Mystical_Trickster",
       "name": "Мистический ловкач",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Duelist",
       "name": "Дуэлянт",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Combinator",
       "name": "Комбинатор",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Scout",
       "name": "Скаут",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Detective",
       "name": "Сыщик",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Phantom",
       "name": "Фантом",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Soul_Blade",
       "name": "Клинок души",
       "desc": ""
     },
     {
-      "id": "assassin",
+      "id": "murderer",
       "name": "Убийца",
       "desc": ""
     }
