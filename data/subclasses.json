@@ -387,99 +387,99 @@
   ],
       "Monk": [
     {
-      "id": "",
+      "id": "Path_of_the_Open_Palm",
       "name": "Путь открытой ладони",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Path_of_the_Shadow",
       "name": "Путь тени",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Path_of_the_Four_Elements",
       "name": "Путь четырёх стихий",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Path_of_Long_Death",
       "name": "Путь долгой смерти",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Way_of_the_Kensei",
       "name": "Путь кэнсэя",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Way_of_the_Drunken_Master",
       "name": "Путь пьяного мастера",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Path_of_the_Solar_Soul",
       "name": "Путь солнечной души",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Path_of_the_astral_body",
       "name": "Путь астрального тела",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Way_of_Mercy",
       "name": "Путь милосердия",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Path_of_the_Ascending_Dragon",
       "name": "Путь восходящего дракона",
       "desc": ""
     }
   ],
         "Paladin": [
     {
-      "id": "",
+      "id": "Oath_of_Allegiance",
       "name": "Клятва преданности",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Oath_of_the_Ancients",
       "name": "Клятва древних",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Oath_of_Vengeance",
       "name": "Клятва мести",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Oathbreaker",
       "name": "Клятвопреступник",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Oath_of_the_Crown",
       "name": "Клятва короны",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Oath_of_Atonement",
       "name": "Клятва искупления",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Oath_of_Conquest",
       "name": "Клятва покорения",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Oath_of_Glory",
       "name": "Клятва славы",
       "desc": ""
     },
     {
-      "id": "",
+      "id": "Oath_of_the_Guardians",
       "name": "Клятва смотрителей",
       "desc": ""
     }
@@ -528,30 +528,190 @@
   ],
         "Sorcerer": [
     {
-      "id": "",
-      "name": "",
+      "id": "Hunter",
+      "name": "Охотник",
       "desc": ""
     },
     {
-      "id": "",
-      "name": "",
+      "id": "Beastmaster",
+      "name": "Повелитель зверей",
+      "desc": ""
+    },
+    {
+      "id": "Horizon_Wanderer",
+      "name": "Странник горизонта",
+      "desc": ""
+    },
+    {
+      "id": "Shadow_Hunter",
+      "name": "Сумрачный охотник",
+      "desc": ""
+    },
+    {
+      "id": "Monster_Slayer",
+      "name": "Убийца чудовищ",
+      "desc": ""
+    },
+    {
+      "id": "Fairy_Wanderer",
+      "name": "Странник фей",
+      "desc": ""
+    },
+    {
+      "id": "Keeper_of_the_Swarm",
+      "name": "Хранитель роя",
+      "desc": ""
+    },
+    {
+      "id": "Drake_Rider",
+      "name": "Наездник на дрейке",
       "desc": ""
     }
   ],
   
-        "": [
+        "Sorcerer": [
     {
-      "id": "",
-      "name": "",
+      "id": "Legacy_of_Dragon_Blood",
+      "name": "Наследие драконьей крови",
       "desc": ""
     },
     {
-      "id": "",
-      "name": "",
+      "id": "Wild_Magic",
+      "name": "Дикая магия",
+      "desc": ""
+    },
+    {
+      "id": "Divine_soul",
+      "name": "Божественная душа",
+      "desc": ""
+    },
+    {
+      "id": "Shadow_magic",
+      "name": "Теневая магия",
+      "desc": ""
+    },
+    {
+      "id": "Storm_Witchcraft",
+      "name": "Штормовое колдовство",
+      "desc": ""
+    },
+    {
+      "id": "Aberrant_mind",
+      "name": "Аберрантный разум",
+      "desc": ""
+    },
+    {
+      "id": "Clockwork_soul",
+      "name": "Заводная душа",
+      "desc": ""
+    },
+    {
+      "id": "Lunar_Witchcraft",
+      "name": "Лунное чародейство",
       "desc": ""
     }
   ],
-  
+        "Sorcerer": [
+    {
+      "id": "Amorist",
+      "name": "Аморист",
+      "desc": ""
+    },
+    {
+      "id": "Apothecary",
+      "name": "Апотекарий",
+      "desc": ""
+    },
+    {
+      "id": "Mad_Bomber",
+      "name": "Безумный бомбометатель",
+      "desc": ""
+    },
+    {
+      "id": "Dynamo_engineer",
+      "name": "Динамо-инженер",
+      "desc": ""
+    },
+    {
+      "id": "Researcher",
+      "name": "Исследователь",
+      "desc": ""
+    },
+    {
+      "id": "Xenochemist",
+      "name": "Ксенохимик",
+      "desc": ""
+    },
+    {
+      "id": "Master_of_Poisons",
+      "name": "Мастер ядов",
+      "desc": ""
+    }
+    {
+      "id": "Mixologist",
+      "name": "Миксолог",
+      "desc": ""
+    },
+    {
+      "id": "Mutageneticist",
+      "name": "Мутагенетик",
+      "desc": ""
+    },
+    {
+      "id": "Slime_Spreader",
+      "name": "Разводчик слизи",
+      "desc": ""
+    },
+    {
+      "id": "Shooter",
+      "name": "Стрелок",
+      "desc": ""
+    }
+  ],
+        "Sorcerer": [
+    {
+      "id": "Water_trine",
+      "name": "Трин воды",
+      "desc": ""
+    },
+    {
+      "id": "Air_trine",
+      "name": "Трин воздуха",
+      "desc": ""
+    },
+    {
+      "id": "Earth_Trine",
+      "name": "Трин земли",
+      "desc": ""
+    },
+    {
+      "id": "Trine_of_Fire",
+      "name": "Трин огня",
+      "desc": ""
+    }
+  ],
+        "Sorcerer": [
+    {
+      "id": "Water_trine",
+      "name": "Трин воды",
+      "desc": ""
+    },
+    {
+      "id": "Air_trine",
+      "name": "Трин воздуха",
+      "desc": ""
+    },
+    {
+      "id": "Earth_Trine",
+      "name": "Трин земли",
+      "desc": ""
+    },
+    {
+      "id": "Trine_of_Fire",
+      "name": "Трин огня",
+      "desc": ""
+    }
+  ],
   "rogue": [
     {
       "id": "",
@@ -596,7 +756,7 @@
     {
       "id": "assassin",
       "name": "Убийца",
-      "desc": "Мастер скрытности, маскировки и внезапных атак."
+      "desc": ""
     }
   ]
 }
