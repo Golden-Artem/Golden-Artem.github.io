@@ -665,7 +665,9 @@ function loadCharacterFromFile(e){
 }
 
 function loadCharacterFromFile(e){
-  const f = e.target.files[0]; if(!f) return;
+  const f = e.target.files[0]; 
+  if(!f) return;
+
   const r = new FileReader();
   r.onload = ev=>{
     try{
@@ -673,25 +675,45 @@ function loadCharacterFromFile(e){
       if(obj.character){
         // merge
         state.character = Object.assign({}, state.character, obj.character);
-        // update UI
+
+        // update UI — основные поля
         refs.charName.value = state.character.name || '';
         refs.level.value = state.character.level || 1;
         refs.currentHP.value = state.character.hp || 0;
         refs.ac.value = state.character.ac || 10;
         refs.init.value = state.character.init || 0;
-        // money
+
+        // 🧩 Класс, подкласс, раса
+        refs.classSelect.value = state.character.classId || '';
+        renderSubclassOptions();
+        refs.subclassSelect.value = state.character.subclassId || '';
+        refs.raceSelect.value = state.character.race || '';
+
+        // синхронизируем боковую панель
+        refs.classSideSelect.value = state.character.classId || '';
+        refs.subclassSideSelect.value = state.character.subclassId || '';
+        refs.raceSideSelect.value = state.character.race || '';
+
+        // 🧾 Деньги
         refs.money_cp.value = state.character.money.cp || 0;
         refs.money_sp.value = state.character.money.sp || 0;
         refs.money_gp.value = state.character.money.gp || 0;
         refs.money_pp.value = state.character.money.pp || 0;
-        // stats
+
+        // 🧠 Характеристики, списки
         renderStatBlocks();
-        // lists
         renderChosenSpells();
         renderChosenEffects();
         renderChosenItems();
         renderSkillList();
-        // avatar: if present, draw
+
+        // 🗒️ Прочие поля
+        refs.background.value = state.character.background || '';
+        refs.customFeature.value = state.character.customFeature || '';
+        document.getElementById('shortNote').value = obj.notes?.short || '';
+        document.getElementById('longNote').value = obj.notes?.long || '';
+
+        // 🎨 Аватар
         if(state.character.avatarDataUrl){
           const img = new Image();
           img.onload = ()=> {
@@ -703,14 +725,18 @@ function loadCharacterFromFile(e){
           };
           img.src = state.character.avatarDataUrl;
         }
+
         syncQuickPreview();
-        log('Файл загружен.');
+        log('Файл успешно загружен.');
       } else {
         alert('Неверный формат JSON (нет поля character).');
       }
-    }catch(err){ alert('Ошибка чтения JSON: '+err.message); }
+    }catch(err){ 
+      alert('Ошибка чтения JSON: '+err.message); 
+    }
   };
-  r.readAsText(f); e.target.value='';
+  r.readAsText(f); 
+  e.target.value='';
 }
 
 /* -------------------------
