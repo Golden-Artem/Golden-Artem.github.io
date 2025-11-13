@@ -541,32 +541,127 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 });
 
 /* -------------------------
-   Save / Load character
+   Save / Load character (исправленные)
 -------------------------*/
 function saveCharacterToFile(){
-  // collect other fields that may not be synced
-  state.character.name = refs.charName.value || state.character.name;
-  state.character.level = parseInt(refs.level.value) || state.character.level;
-  state.character.hp = parseInt(refs.currentHP.value) || state.character.hp;
-  state.character.ac = refs.ac.value || state.character.ac;
-  state.character.init = refs.init.value || state.character.init;
-  state.character.money.cp = parseInt(refs.money_cp.value)||0;
-  state.character.money.sp = parseInt(refs.money_sp.value)||0;
-  state.character.money.gp = parseInt(refs.money_gp.value)||0;
-  state.character.money.pp = parseInt(refs.money_pp.value)||0;
-  // avatar
-  try{ state.character.avatarDataUrl = refs.avatarCanvas.toDataURL(); } catch(e){}
-  // notes
+  // собираем всё содержимое формы
+  state.character.name = refs.charName.value || '';
+  state.character.level = parseInt(refs.level.value) || 1;
+  state.character.hp = parseInt(refs.currentHP.value) || 0;
+  state.character.ac = refs.ac.value || 10;
+  state.character.init = refs.init.value || 0;
+
+  // класс / подкласс / раса
+  state.character.classId = refs.classSelect.value;
+  state.character.subclassId = refs.subclassSelect.value;
+  state.character.race = refs.raceSelect.value;
+
+  // фон и архетип
+  state.character.background = refs.background.value || '';
+  state.character.customFeature = refs.customFeature.value || '';
+
+  // характеристики
+  document.querySelectorAll('.statInput').forEach(inp=>{
+    const st = inp.dataset.stat;
+    state.character.stats[st] = parseInt(inp.value)||0;
+  });
+
+  // деньги
+  state.character.money = {
+    cp: parseInt(refs.money_cp.value)||0,
+    sp: parseInt(refs.money_sp.value)||0,
+    gp: parseInt(refs.money_gp.value)||0,
+    pp: parseInt(refs.money_pp.value)||0
+  };
+
+  // заметки
+  const shortNote = document.getElementById('shortNote').value;
+  const longNote = document.getElementById('longNote').value;
+
+  // аватар
+  try { state.character.avatarDataUrl = refs.avatarCanvas.toDataURL(); } catch(e){}
+
   const exportObj = {
-    meta: { version: 'v1', created: new Date().toISOString() },
+    meta: { version: 'v2', created: new Date().toISOString() },
     character: state.character,
-    notes: {
-      short: document.getElementById('shortNote').value,
-      long: document.getElementById('longNote').value
+    notes: { short: shortNote, long: longNote }
+  };
+
+  download('character.json', JSON.stringify(exportObj, null, 2));
+  log('✅ Лист персонажа сохранён в JSON');
+}
+
+function loadCharacterFromFile(e){
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ev=>{
+    try{
+      const obj = JSON.parse(ev.target.result);
+      if(!obj.character) return alert('Неверный формат файла!');
+
+      state.character = Object.assign({}, state.character, obj.character);
+
+      // восстанавливаем поля
+      refs.charName.value = state.character.name || '';
+      refs.level.value = state.character.level || 1;
+      refs.currentHP.value = state.character.hp || 0;
+      refs.ac.value = state.character.ac || 10;
+      refs.init.value = state.character.init || 0;
+
+      refs.background.value = state.character.background || '';
+      refs.customFeature.value = state.character.customFeature || '';
+
+      // класс / подкласс / раса
+      refs.classSelect.value = state.character.classId || '';
+      renderSubclassOptions();
+      refs.subclassSelect.value = state.character.subclassId || '';
+      refs.raceSelect.value = state.character.race || '';
+
+      // характеристики
+      renderStatBlocks();
+      for(const [k,v] of Object.entries(state.character.stats||{})){
+        const el = document.querySelector(`.statInput[data-stat="${k}"]`);
+        if(el) el.value = v;
+      }
+
+      // деньги
+      refs.money_cp.value = state.character.money?.cp || 0;
+      refs.money_sp.value = state.character.money?.sp || 0;
+      refs.money_gp.value = state.character.money?.gp || 0;
+      refs.money_pp.value = state.character.money?.pp || 0;
+
+      // заметки
+      if(obj.notes){
+        document.getElementById('shortNote').value = obj.notes.short || '';
+        document.getElementById('longNote').value = obj.notes.long || '';
+      }
+
+      // аватар
+      if(state.character.avatarDataUrl){
+        const img = new Image();
+        img.onload = ()=>{
+          const ctx = refs.avatarCanvas.getContext('2d');
+          ctx.clearRect(0,0,refs.avatarCanvas.width,refs.avatarCanvas.height);
+          const ratio = Math.min(refs.avatarCanvas.width/img.width, refs.avatarCanvas.height/img.height);
+          const w = img.width*ratio, h = img.height*ratio;
+          ctx.drawImage(img,(refs.avatarCanvas.width-w)/2,(refs.avatarCanvas.height-h)/2,w,h);
+        };
+        img.src = state.character.avatarDataUrl;
+      }
+
+      renderChosenItems();
+      renderChosenSpells();
+      renderChosenEffects();
+      renderSkillList();
+      syncQuickPreview();
+      log('✅ Лист персонажа загружен из JSON');
+    }catch(err){
+      alert('Ошибка загрузки JSON: '+err.message);
     }
   };
-  download('character.json', JSON.stringify(exportObj, null, 2));
-  log('Сохранено в JSON.');
+  r.readAsText(f);
+  e.target.value = '';
 }
 
 function loadCharacterFromFile(e){
