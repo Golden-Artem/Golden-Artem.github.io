@@ -60,7 +60,9 @@ const state = {
     effects: [],
     skills: [],
     money: {cp:0, sp:0, gp:0, pp:0},
-    avatarDataUrl: null
+    avatarDataUrl: null,
+    background: '',
+    customFeature: ''
   },
   drawing: false
 };
@@ -79,6 +81,7 @@ const refs = {
   saveJsonBtn: document.getElementById('saveJsonBtn'),
   loadJson: document.getElementById('loadJson'),
   clearBtn: document.getElementById('clearBtn'),
+  toggleThemeBtn: document.getElementById('toggleTheme'),
   autoFill: document.getElementById('autoFill'),
   itemInput: document.getElementById('itemInput'),
   addItemBtn: document.getElementById('addItemBtn'),
@@ -209,6 +212,7 @@ function renderClassOptions(){
   renderSubclassOptions();
 }
 function renderSubclassOptions(){
+  // выбираем значение из активного селекта (основного или бокового)
   const cls = refs.classSelect.value || refs.classSideSelect.value;
   refs.subclassSelect.innerHTML = '<option value="">—</option>';
   refs.subclassSideSelect.innerHTML = '<option value="">—</option>';
@@ -235,14 +239,40 @@ function renderStatBlocks(){
     const val = state.character.stats[s] ?? 10;
     const div = document.createElement('div');
     div.className = 'stat';
+    // value input + label; модификатор добавляется отдельно
     div.innerHTML = `<div class="val"><input data-stat="${s}" class="statInput" value="${val}"></div><div class="label">${s}</div>`;
     refs.statsBlock.appendChild(div);
   });
-  document.querySelectorAll('.statInput').forEach(inp=>{
-    inp.addEventListener('input', e=>{
-      const st = e.target.dataset.stat; const v = parseInt(e.target.value) || 0;
-      state.character.stats[st] = v; syncQuickPreview();
-    });
+
+  // навесим обработчики на инпуты и создадим элементы модификаторов под каждой характеристикой
+  document.querySelectorAll('.stat').forEach(statBlock => {
+    const input = statBlock.querySelector('.statInput');
+    // создаём/находим div.mod
+    let modEl = statBlock.querySelector('.mod');
+    if (!modEl) {
+      modEl = document.createElement('div');
+      modEl.className = 'mod';
+      modEl.style.fontSize = '12px';
+      modEl.style.marginTop = '4px';
+      modEl.style.color = 'var(--muted)';
+      statBlock.appendChild(modEl);
+    }
+
+    function updateFromInput(e){
+      const st = input.dataset.stat;
+      const v = parseInt(input.value) || 0;
+      state.character.stats[st] = v;
+      // обновляем отображение модификатора
+      const mod = Math.floor((v - 10) / 2);
+      modEl.textContent = (mod >= 0 ? `+${mod}` : `${mod}`);
+      syncQuickPreview();
+    }
+
+    // инициалный расчёт
+    updateFromInput();
+
+    // слушатель
+    input.addEventListener('input', updateFromInput);
   });
 }
 
@@ -383,7 +413,12 @@ function syncQuickPreview(){
   refs.currentHP.value = s.hp || 0;
   refs.ac.value = s.ac || 10;
   refs.init.value = s.init || 0;
-  document.getElementById('shortNote').value = document.getElementById('shortNote').value || '';
+
+  // background / custom feature visible in inputs
+  refs.background.value = s.background || '';
+  refs.customFeature.value = s.customFeature || '';
+
+  // notes are stored separately in export object; if present in state.character we don't override notes (syncQuickPreview is not authoritative for notes)
 }
 
 /* -------------------------
@@ -436,6 +471,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   // class/subclass/race wiring
   refs.classSelect.onchange = (e)=>{
     state.character.classId = e.target.value;
+    refs.classSideSelect.value = e.target.value;
     renderSubclassOptions(); syncQuickPreview();
     autoFillClassStats();
   };
@@ -463,7 +499,19 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   refs.money_gp.addEventListener('input', ()=> { state.character.money.gp = parseInt(refs.money_gp.value)||0; syncQuickPreview(); });
   refs.money_pp.addEventListener('input', ()=> { state.character.money.pp = parseInt(refs.money_pp.value)||0; syncQuickPreview(); });
 
-  // inspect buttons in side lists (delegation)
+  // theme toggle (фикс светлой темы)
+  if(refs.toggleThemeBtn){
+    refs.toggleThemeBtn.onclick = ()=>{
+      document.documentElement.classList.toggle('light');
+      const isLight = document.documentElement.classList.contains('light');
+      refs.toggleThemeBtn.textContent = isLight ? 'Светлая тема' : 'Тёмная тема';
+      log('Тема: ' + (isLight ? 'светлая' : 'тёмная'));
+    };
+    // ставим подпись корректно
+    refs.toggleThemeBtn.textContent = document.documentElement.classList.contains('light') ? 'Светлая тема' : 'Тёмная тема';
+  }
+
+  // inspect buttons in side lists (делегирование)
   document.body.addEventListener('click', (e)=>{
     if(e.target.matches('.inspectClass')){
       const id=e.target.dataset.class; const c=classes.find(x=>x.id===id); if(c) openModal(c.name, c.description || '');
@@ -541,7 +589,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 });
 
 /* -------------------------
-   Save / Load character (исправленные)
+   Save / Load character
 -------------------------*/
 function saveCharacterToFile(){
   // собираем всё содержимое формы
@@ -588,7 +636,7 @@ function saveCharacterToFile(){
   };
 
   download('character.json', JSON.stringify(exportObj, null, 2));
-  log('✅ Лист персонажа сохранён в JSON');
+  log('Сохранено в JSON.');
 }
 
 function loadCharacterFromFile(e){
@@ -612,11 +660,14 @@ function loadCharacterFromFile(e){
       refs.background.value = state.character.background || '';
       refs.customFeature.value = state.character.customFeature || '';
 
-      // класс / подкласс / раса
+      // класс / подкласс / раса (и боковые селекты)
       refs.classSelect.value = state.character.classId || '';
-      renderSubclassOptions();
+      refs.classSideSelect.value = state.character.classId || '';
+      renderSubclassOptions(); // важно: сначала отрисовать подклассы
       refs.subclassSelect.value = state.character.subclassId || '';
+      refs.subclassSideSelect.value = state.character.subclassId || '';
       refs.raceSelect.value = state.character.race || '';
+      refs.raceSideSelect.value = state.character.race || '';
 
       // характеристики
       renderStatBlocks();
@@ -635,6 +686,9 @@ function loadCharacterFromFile(e){
       if(obj.notes){
         document.getElementById('shortNote').value = obj.notes.short || '';
         document.getElementById('longNote').value = obj.notes.long || '';
+      } else {
+        document.getElementById('shortNote').value = '';
+        document.getElementById('longNote').value = '';
       }
 
       // аватар
@@ -648,6 +702,9 @@ function loadCharacterFromFile(e){
           ctx.drawImage(img,(refs.avatarCanvas.width-w)/2,(refs.avatarCanvas.height-h)/2,w,h);
         };
         img.src = state.character.avatarDataUrl;
+      } else {
+        // если нет аватара — очистим холст
+        const ctx = refs.avatarCanvas.getContext('2d'); ctx.clearRect(0,0,refs.avatarCanvas.width, refs.avatarCanvas.height);
       }
 
       renderChosenItems();
@@ -655,88 +712,13 @@ function loadCharacterFromFile(e){
       renderChosenEffects();
       renderSkillList();
       syncQuickPreview();
-      log('✅ Лист персонажа загружен из JSON');
+      log('Файл загружен.');
     }catch(err){
-      alert('Ошибка загрузки JSON: '+err.message);
+      alert('Ошибка чтения JSON: '+err.message);
     }
   };
   r.readAsText(f);
   e.target.value = '';
-}
-
-function loadCharacterFromFile(e){
-  const f = e.target.files[0]; 
-  if(!f) return;
-
-  const r = new FileReader();
-  r.onload = ev=>{
-    try{
-      const obj = JSON.parse(ev.target.result);
-      if(obj.character){
-        // merge
-        state.character = Object.assign({}, state.character, obj.character);
-
-        // update UI — основные поля
-        refs.charName.value = state.character.name || '';
-        refs.level.value = state.character.level || 1;
-        refs.currentHP.value = state.character.hp || 0;
-        refs.ac.value = state.character.ac || 10;
-        refs.init.value = state.character.init || 0;
-
-        // 🧩 Класс, подкласс, раса
-        refs.classSelect.value = state.character.classId || '';
-        renderSubclassOptions();
-        refs.subclassSelect.value = state.character.subclassId || '';
-        refs.raceSelect.value = state.character.race || '';
-
-        // синхронизируем боковую панель
-        refs.classSideSelect.value = state.character.classId || '';
-        refs.subclassSideSelect.value = state.character.subclassId || '';
-        refs.raceSideSelect.value = state.character.race || '';
-
-        // 🧾 Деньги
-        refs.money_cp.value = state.character.money.cp || 0;
-        refs.money_sp.value = state.character.money.sp || 0;
-        refs.money_gp.value = state.character.money.gp || 0;
-        refs.money_pp.value = state.character.money.pp || 0;
-
-        // 🧠 Характеристики, списки
-        renderStatBlocks();
-        renderChosenSpells();
-        renderChosenEffects();
-        renderChosenItems();
-        renderSkillList();
-
-        // 🗒️ Прочие поля
-        refs.background.value = state.character.background || '';
-        refs.customFeature.value = state.character.customFeature || '';
-        document.getElementById('shortNote').value = obj.notes?.short || '';
-        document.getElementById('longNote').value = obj.notes?.long || '';
-
-        // 🎨 Аватар
-        if(state.character.avatarDataUrl){
-          const img = new Image();
-          img.onload = ()=> {
-            const ctx = refs.avatarCanvas.getContext('2d');
-            ctx.clearRect(0,0,refs.avatarCanvas.width, refs.avatarCanvas.height);
-            const ratio = Math.min(refs.avatarCanvas.width/img.width, refs.avatarCanvas.height/img.height);
-            const w = img.width*ratio, h=img.height*ratio;
-            ctx.drawImage(img, (refs.avatarCanvas.width-w)/2, (refs.avatarCanvas.height-h)/2, w,h);
-          };
-          img.src = state.character.avatarDataUrl;
-        }
-
-        syncQuickPreview();
-        log('Файл успешно загружен.');
-      } else {
-        alert('Неверный формат JSON (нет поля character).');
-      }
-    }catch(err){ 
-      alert('Ошибка чтения JSON: '+err.message); 
-    }
-  };
-  r.readAsText(f); 
-  e.target.value='';
 }
 
 /* -------------------------
@@ -754,11 +736,15 @@ function clearSheet(){
     hp:0, ac:10, init:0,
     spells:[], items:[], effects:[], skills:[],
     money: {cp:0,sp:0,gp:0,pp:0},
-    avatarDataUrl: null
+    avatarDataUrl: null,
+    background: '',
+    customFeature: ''
   };
   document.getElementById('charName').value='';
   document.getElementById('shortNote').value='';
   document.getElementById('longNote').value='';
+  document.getElementById('background').value='';
+  document.getElementById('customFeature').value='';
   renderStatBlocks(); renderChosenSpells(); renderChosenEffects(); renderChosenItems(); renderSkillList(); syncQuickPreview();
   // clear avatar canvas
   const ctx = refs.avatarCanvas.getContext('2d'); ctx.clearRect(0,0,refs.avatarCanvas.width, refs.avatarCanvas.height);
