@@ -409,7 +409,8 @@ function syncQuickPreview(){
 
   // main inputs
   refs.charName.value = s.name || '';
-  refs.level.value = s.level || 1;
+  if (document.activeElement !== refs.level) {
+  refs.level.value = s.level || 1;}
   refs.currentHP.value = s.hp || 0;
   refs.ac.value = s.ac || 10;
   refs.init.value = s.init || 0;
