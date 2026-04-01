@@ -423,7 +423,12 @@ header {
 <div class="section" style="padding-bottom:0;"><h2>Отзывы игроков</h2></div>
 <div class="reviews-marquee">
   <div class="marquee-content">
-
+<div style="padding: 40px;">
+  <h3>Оставить отзыв</h3>
+  <input id="reviewName" class="form-input" placeholder="Ваше имя"><br><br>
+  <textarea id="reviewText" class="form-input" placeholder="Ваш отзыв"></textarea><br><br>
+  <button onclick="addReview()" class="button">Добавить отзыв</button>
+</div>
   </div>
 </div>
 <div class="order-container">
@@ -610,9 +615,47 @@ setTimeout(() => {
 }, 0);
   return div;
 }
+function addReview() {
+  const name = document.getElementById('reviewName').value;
+  const text = document.getElementById('reviewText').value;
+
+  if (!name || !text) {
+    alert("Заполни все поля!");
+    return;
+  }
+
+  const review = { 
+  name, 
+  text, 
+  date: Date.now() 
+  };
+
+  let reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+  reviews.push(review);
+
+  localStorage.setItem('reviews', JSON.stringify(reviews));
+
+  document.getElementById('reviewName').value = '';
+  document.getElementById('reviewText').value = '';
+  const MAX_LENGTH = 300;
+
+  if (text.length > MAX_LENGTH) {
+    alert("Отзыв слишком длинный (максимально 300 символов)");
+  return;}
+  const MAX_REVIEWS = 20;
+  if (reviews.length >= MAX_REVIEWS) {
+    reviews.shift(); // удаляем самый старый
+  }
+  
+  loadReviews(); // обновляем
+}
 async function loadReviews() {
   const res = await fetch('infa/reviews.json');
-  const reviews = await res.json();
+  const jsonReviews = await res.json();
+
+  const localReviews = JSON.parse(localStorage.getItem('reviews')) || [];
+
+  const reviews = [...jsonReviews, ...localReviews];
 
   const container = document.querySelector('.marquee-content');
   container.innerHTML = '';
@@ -623,13 +666,12 @@ async function loadReviews() {
 
     div.innerHTML = `
       <div class="review-text">"${r.text}"</div>
-      <div class="review-author">— ${r.author}</div>
+      <div class="review-author">— ${r.author || r.name}</div>
     `;
 
     container.appendChild(div);
   });
 
-  // дублируем для бесконечности
   container.innerHTML += container.innerHTML;
 }
 function fillDropdown(masters) {
@@ -661,9 +703,21 @@ function fillDropdown(masters) {
     }
   });
 }
+function cleanOldReviews() {
+  let reviews = JSON.parse(localStorage.getItem('reviews')) || [];
 
+  const now = Date.now();
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+
+  // если у старых отзывов нет даты — оставляем их
+  reviews = reviews.filter(r => !r.date || (now - r.date < WEEK));
+
+  localStorage.setItem('reviews', JSON.stringify(reviews));
+}
 loadMasters();
+cleanOldReviews()
 loadReviews();
+
 
 function getRequests(name) {
   return parseInt(localStorage.getItem(name)) || 0;
