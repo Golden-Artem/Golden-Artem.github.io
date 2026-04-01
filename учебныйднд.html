@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мастера DnD — Каталог</title>
+<style>
+/* БАЗА */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: #0f172a;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+header {
+  padding: 80px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border-bottom: 1px solid #334155;
+}
+
+.section { padding: 60px 40px; }
+.section h2 {
+  font-size: 32px;
+  border-left: 5px solid #6366f1;
+  padding-left: 15px;
+  margin-bottom: 30px;
+}
+
+/* СЕТКА */
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 30px;
+}
+
+/* КАРТОЧКИ */
+.card {
+  background: #1e293b;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #334155;
+  transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ТОП — эффект увеличения картинки */
+.top-masters .card-image-container {
+  height: 250px;
+  transition: height 0.5s ease;
+}
+
+.top-masters .card:hover .card-image-container {
+  height: 400px;
+}
+
+.top-masters .card img {
+  object-fit: cover;
+  transition: 0.5s;
+  object-position: center top;
+}
+
+.top-masters .card:hover img {
+  object-fit: contain;
+  transform: scale(1.05);
+}
+
+/* ВСЕ МАСТЕРА — эффект как отзывы */
+.all-masters .card:hover {
+  transform: scale(1.1);
+  z-index: 10;
+  border-color: #6366f1;
+  background: #26334d;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+/* ОБЩЕЕ ДЛЯ КАРТИНОК */
+.card-image-container {
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  background: #020617;
+}
+
+.card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 25px;
+  flex-grow: 1;
+}
+
+.name {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.info {
+  font-size: 15px;
+  margin-bottom: 5px;
+  color: #94a3b8;
+}
+
+/* КНОПКА */
+.button {
+  display: block;
+  text-align: center;
+  margin-top: 15px;
+  padding: 12px;
+  background: #6366f1;
+  border-radius: 12px;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+/* Кнопка запроса*/
+.button-zap{
+  display: block;
+  text-align: center;
+  margin-top: 50px;
+  padding: 20px;
+  background: #6366f1;
+  border-radius: 20px;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  min-width: 350px;       
+  font-size: 20px;       
+  letter-spacing: 1px;   
+  transition: 0.3s;     
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3); 
+}
+.order-container {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+  width: 100%;
+}
+.button-zap:hover {
+  transform: translateY(-5px) scale(1.02); /* Всплытие при наведении */
+  box-shadow: 0 15px 40px rgba(99, 102, 241, 0.5);
+  background: #4f46e5;   /* Чуть меняем оттенок */
+}
+/* Для мобильных устройств */
+@media (max-width: 480px) {
+  .button-zap {
+    min-width: 90%;
+    font-size: 18px;
+  }
+}
+/* Стили специально для полей ввода, чтобы они подходили под .card */
+.form-input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 15px;
+  color: white;
+  font-size: 16px;
+  outline: none;
+  transition: 0.3s;
+}
+
+.form-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+
+/* Фикс для центрирования именно этого модального окна */
+#orderModal .modal-content {
+  margin: 10vh auto;
+  position: relative;
+}
+.button:hover {
+  background: #4f46e5;
+}
+
+/* МОДАЛКА */
+.modal {
+  display: none;
+  opacity: 0;
+  transition: 0.3s;
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+}
+
+.modal.show {
+  opacity: 1;
+}
+
+.modal-content {
+  background: #1e293b;
+  margin: 2% auto;
+  width: 90%;
+  max-width: 700px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+}
+
+/* ВОТ ГЛАВНЫЙ ФИКС СКРОЛЛА */
+.modal-scroll {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* КРАСИВЫЙ СКРОЛЛ */
+.modal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 10px;
+}
+
+.close {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  font-size: 35px;
+  cursor: pointer;
+  color: #fff;
+  z-index: 10;
+}
+
+.modal-img {
+  width: 100%;
+  max-height: 450px;
+  object-fit: contain;
+  background: #020617;
+}
+
+.modal-body {
+  padding: 30px;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.modal-note {
+  border-top: 1px solid #334155;
+  padding-top: 20px;
+  font-style: italic;
+  color: #cbd5e1;
+}
+
+/* ТАБЛИЦА ТРЕБОВАНИЙ */
+.req-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.req-table td {
+  padding: 10px;
+  border-bottom: 1px solid #334155;
+}
+
+.req-table td:first-child {
+  color: #94a3b8;
+}
+
+.req-table td:last-child {
+  text-align: right;
+  font-weight: bold;
+  color: #818cf8;
+}
+
+/* ОТЗЫВЫ */
+.reviews-marquee {
+  width: 100%;
+  overflow: hidden; /* ВАЖНО */
+  padding: 40px 0 100px;
+  position: relative;
+}
+
+.marquee-content {
+  display: flex;
+  width: max-content;
+  animation: scroll-left 45s linear infinite;
+}
+
+.review-item {
+  flex-shrink: 0;
+  width: 380px;
+  background: #1e293b;
+  margin: 0 25px;
+  padding: 30px;
+  border-radius: 20px;
+  border: 1px solid #334155;
+  transition: 0.4s;
+}
+
+.review-item:hover {
+  transform: scale(1.15);
+  border-color: #6366f1;
+  background: #26334d;
+}
+
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.footer {
+  padding: 40px;
+  text-align: center;
+  background: #1e293b;
+  color: #64748b;
+}
+.review-text {
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.8;
+  color: #d1d5db;
+}
+
+.review-author {
+  font-weight: bold;
+  color: #818cf8;
+  text-align: right;
+  margin-top: 20px;
+  font-size: 16px;
+  opacity: 0.9;
+}
+.marquee-content:hover {
+  animation-play-state: paused;
+}
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+  z-index: 2000;
+}
+
+.dropdown-item {
+  padding: 12px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #6366f1;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Каталог мастеров DnD</h1>
+  <p>Найди идеального проводника в мир приключений</p>
+</header>
+
+<div class="section top-masters">
+  <h2>Топ мастеров</h2>
+  <div class="container">
+
+  </div>
+</div>
+
+<!--Окно подробнее -->
+<div id="masterModal" class="modal">
+  <div class="modal-content">
+   <div class="modal-scroll">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <img src="" id="modalImg" class="modal-img">
+    <div class="modal-body">
+      <h2 id="modalName">Имя мастера</h2>
+      <div class="modal-grid">
+        <div class="info"><b>Стиль:</b> <span id="modalStyle"></span></div>
+        <div class="info"><b>Сеттинг:</b> <span id="modalSetting"></span></div>
+        <div class="info"><b>Опыт:</b> <span id="modalExp"></span></div>
+        <div class="info"><b>Партия:</b> <span id="modalTime"></span></div>
+        <div class="info"><b>Цена:</b> <span id="modalPrice"></span></div>
+        <div class="info"><b>Телефон:</b> <span id="modalPhone"></span></div>
+        <div class="info"><b>Название:</b> <span id="modalMesto"></span></div>       
+        <div class="info"><b>Адрес:</b> <span id="modalAdress"></span></div>
+      </div>
+      <div class="modal-note" id="modalNote"></div>
+        <div class="requirements">
+      <h3>Требования к игроку</h3>
+      <table class="req-table">
+        <tr><td>18+</td><td id="req18"></td></tr>
+        <tr><td>Уровень знаний</td><td id="reqLevel"></td></tr>
+        <tr><td>Свои кубики</td><td id="reqDice"></td></tr>
+        <tr><td>Лист персонажа</td><td id="reqSheet"></td></tr>
+        <tr><td>Миниатюра</td><td id="reqMini"></td></tr>
+        <tr><td>Не опаздывать</td><td id="reqLate"></td></tr>
+        <tr><td>Можно новичку</td><td id="reqNew"></td></tr>
+      </table>
+      </div>  
+    </div>
+    </div>
+  </div>
+</div>
+<div class="section all-masters">
+  <h2>Все мастера</h2>
+  <div class="container">
+
+  </div>
+</div>
+<div class="section" style="padding-bottom:0;"><h2>Отзывы игроков</h2></div>
+<div class="reviews-marquee">
+  <div class="marquee-content">
+
+  </div>
+</div>
+<div class="order-container">
+  <button id="openOrderModal" class="button-zap">
+    Оформить запрос мастеру
+  </button>
+</div>
+<div id="orderModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeOrderModal">&times;</span>
+    
+    <div class="modal-body">
+      <h2 style="border-left-color: #6366f1; margin-top: 0;">Новая заявка</h2>
+      <p class="info" style="margin-bottom: 25px;">Заполните данные, чтобы мастер мог связаться с вами.</p>
+      
+      <form id="orderForm">
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+          <input type="text" id="clientName" placeholder="Ваше ФИО" class="form-input" required>
+          <input type="email" id="clientEmail" placeholder="Ваша почта" class="form-input" required>
+          <div style="position: relative;">
+          <input type="text" id="masterName" placeholder="ФИО мастера" class="form-input" readonly>
+          <div id="dropdown" class="dropdown"></div>
+          </div>
+          <button type="submit" class="button" style="margin-top: 10px; padding: 18px;">Отправить мастеру</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="footer">© 2026 Каталог мастеров DnD. Пусть кубы всегда будут на вашей стороне.</div>
+
+<script>
+let mastersData = [];
+const modal = document.getElementById("masterModal");
+
+
+
+function closeModal() {
+    modal.classList.remove("show");
+    setTimeout(() => { modal.style.display = "none"; }, 300);
+    document.body.style.overflow = "auto";
+}
+
+//  СКРИПТ ФОРМЫ ЗАПРОСА 
+const orderModal = document.getElementById('orderModal');
+const openOrderBtn = document.getElementById('openOrderModal');
+const orderForm = document.getElementById('orderForm');
+
+// Открыть форму запроса
+if(openOrderBtn) {
+    openOrderBtn.onclick = function() {
+        orderModal.style.display = "block";
+        setTimeout(() => orderModal.classList.add("show"), 10);
+        document.body.style.overflow = "hidden";
+    };
+}
+
+function closeOrderModal() {
+    orderModal.classList.remove("show");
+    setTimeout(() => { orderModal.style.display = "none"; }, 300);
+    document.body.style.overflow = "auto";
+}
+
+document.getElementById('closeOrderModal').onclick = closeOrderModal;
+
+// ОБЩЕЕ ЗАКРЫТИЕ (для обоих окон)
+window.onclick = (e) => { 
+    if (e.target == modal) closeModal(); 
+    if (e.target == orderModal) closeOrderModal(); 
+}
+
+document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+        closeModal();
+        closeOrderModal();
+    }
+});
+
+// Обработка отправки формы
+orderForm.onsubmit = (e) => {
+    e.preventDefault();
+
+    const master = document.getElementById('masterName').value;
+
+    let count = getRequests(master);
+    localStorage.setItem(master, count + 1);
+
+    alert('Запрос успешно отправлен, ожидайте ответа на почте!');
+    closeOrderModal();
+    orderForm.reset();
+
+    renderMasters(); // обновляем топ
+};
+
+
+async function loadMasters() {
+  const res = await fetch('infa/masters.json');
+  const masters = await res.json();
+
+  mastersData = masters; // сохраняем глобально
+
+  renderMasters();
+}
+function renderMasters() {
+  const allContainer = document.querySelector('.all-masters .container');
+  const topContainer = document.querySelector('.top-masters .container');
+
+  allContainer.innerHTML = '';
+  topContainer.innerHTML = '';
+
+  //  сортировка по заявкам (json + localStorage)
+  const sorted = [...mastersData].sort((a, b) => {
+    const aTotal = (a.requests || 0) + getRequests(a.name);
+    const bTotal = (b.requests || 0) + getRequests(b.name);
+    return bTotal - aTotal;
+  });
+
+  // ВСЕ мастера
+  mastersData.forEach(m => {
+    allContainer.appendChild(createCard(m));
+  });
+
+  //  ТОП 3 мастера
+  sorted.slice(0, 3).forEach(m => {
+    topContainer.appendChild(createCard(m));
+  });
+
+  fillDropdown(mastersData);
+}
+function createCard(m) {
+  const div = document.createElement('div');
+  div.className = 'card';
+
+  Object.keys(m).forEach(key => {
+    if (typeof m[key] !== 'object') {
+      div.dataset[key] = m[key];
+    }
+  });
+
+  // требования
+  Object.keys(m.req).forEach(key => {
+    div.dataset[key] = m.req[key];
+  });
+
+  div.innerHTML = `
+    <div class="card-image-container">
+      <img src="${m.img}">
+    </div>
+    <div class="card-content">
+      <div class="name">${m.shortName}</div>
+      <div class="info">Стиль: ${m.style}</div>
+      <div class="info">Цена: ${m.price}</div>
+      <button class="button open-modal">Подробнее</button>
+    </div>
+  `;
+setTimeout(() => {
+  div.querySelector('.open-modal').onclick = function() {
+    const card = this.closest('.card');
+
+    document.getElementById("modalImg").src = card.dataset.img;
+    document.getElementById("modalName").innerText = card.dataset.name;
+    document.getElementById("modalStyle").innerText = card.dataset.style;
+    document.getElementById("modalSetting").innerText = card.dataset.setting;
+    document.getElementById("modalExp").innerText = card.dataset.exp;
+    document.getElementById("modalTime").innerText = card.dataset.time;
+    document.getElementById("modalPrice").innerText = card.dataset.price;
+    document.getElementById("modalPhone").innerText = card.dataset.phone;
+    document.getElementById("modalNote").innerText = card.dataset.note;
+    document.getElementById("modalMesto").innerText = card.dataset.mesto;
+    document.getElementById("modalAdress").innerText = card.dataset.adress;
+
+    document.getElementById("req18").innerText = card.dataset["18"];
+    document.getElementById("reqLevel").innerText = card.dataset.level;
+    document.getElementById("reqDice").innerText = card.dataset.dice;
+    document.getElementById("reqSheet").innerText = card.dataset.sheet;
+    document.getElementById("reqMini").innerText = card.dataset.mini;
+    document.getElementById("reqLate").innerText = card.dataset.late;
+    document.getElementById("reqNew").innerText = card.dataset.new;
+
+    modal.style.display = "block";
+    setTimeout(() => modal.classList.add("show"), 10);
+    document.body.style.overflow = "hidden";
+  };
+}, 0);
+  return div;
+}
+async function loadReviews() {
+  const res = await fetch('infa/reviews.json');
+  const reviews = await res.json();
+
+  const container = document.querySelector('.marquee-content');
+  container.innerHTML = '';
+
+  reviews.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'review-item';
+
+    div.innerHTML = `
+      <div class="review-text">"${r.text}"</div>
+      <div class="review-author">— ${r.author}</div>
+    `;
+
+    container.appendChild(div);
+  });
+
+  // дублируем для бесконечности
+  container.innerHTML += container.innerHTML;
+}
+function fillDropdown(masters) {
+  const dropdown = document.getElementById('dropdown');
+  const input = document.getElementById('masterName');
+
+  dropdown.innerHTML = '';
+
+  masters.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item';
+    item.innerText = m.name;
+
+    item.onclick = () => {
+      input.value = m.name;
+      dropdown.style.display = 'none';
+    };
+
+    dropdown.appendChild(item);
+  });
+
+  input.onclick = () => {
+    dropdown.style.display = 'block';
+  };
+
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target) && e.target !== input) {
+      dropdown.style.display = 'none';
+    }
+  });
+}
+
+loadMasters();
+loadReviews();
+
+function getRequests(name) {
+  return parseInt(localStorage.getItem(name)) || 0;
+}
+
+</script>
+
+</body>
+</html>
