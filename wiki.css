@@ -1,0 +1,106 @@
+/* Общий стиль */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: #1a1c1f;
+  color: #e6e6e6;
+  display: flex;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: #111315;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  border-right: 1px solid #2a2d31;
+  overflow-y: auto;
+}
+
+.sidebar h1 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #d4af37;
+  font-family: 'Merriweather', serif;
+}
+
+/* Разделы */
+.nav-section {
+  margin-bottom: 20px;
+}
+
+.nav-section h2 {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* Пункты меню */
+.nav-item {
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.nav-item:hover {
+  background: #2a2d31;
+}
+
+.nav-item.active {
+  background: #3a3f45;
+  color: #ffffff;
+}
+
+/* Контент */
+.content {
+  flex: 1;
+  padding: 40px;
+  max-width: 900px;
+  margin: auto;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* Текст */
+.content h1 {
+  font-family: 'Merriweather', serif;
+  color: #d4af37;
+  margin-bottom: 10px;
+}
+
+.content h2 {
+  margin-top: 24px;
+  color: #c9a94f;
+}
+
+.content p {
+  line-height: 1.6;
+  margin: 10px 0;
+}
+
+/* Списки */
+.content ul {
+  padding-left: 20px;
+}
+
+.content li {
+  margin-bottom: 6px;
+}
+
+/* Выделения */
+.content strong {
+  color: #ffffff;
+}
+
+/* Скролл */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
