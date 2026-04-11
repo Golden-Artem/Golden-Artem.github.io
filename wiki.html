@@ -5,16 +5,15 @@
   <title>D&D Wiki</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Шрифты -->
   <link href="https://fonts.googleapis.com/css2?family=Merriweather&family=Inter&display=swap" rel="stylesheet">
-
-  <!-- ВОТ ЭТО ВАЖНО -->
-  <link rel="stylesheet" href="wiki.css">
+  <link rel="stylesheet" href="./wiki.css">
 </head>
 <body>
 
 <div class="sidebar">
   <h1>📖 D&D Wiki</h1>
+
+  <input type="text" id="search" placeholder="Поиск..." oninput="searchAll(this.value)">
 
   <div class="nav-section">
     <h2>Расы</h2>
@@ -39,11 +38,11 @@
 
 <div class="content" id="content">
   <h1>Добро пожаловать</h1>
-  <p>Выбери категорию слева 👈</p>
+  <p>Выбери категорию или воспользуйся поиском 👈</p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="wiki.js"></script>
+<script src="./wiki.js"></script>
 
 </body>
 </html>
