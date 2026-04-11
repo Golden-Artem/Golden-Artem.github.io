@@ -70,16 +70,16 @@ body {
 /* ===== КОНТЕНТ (ГЛАВНОЕ ИСПРАВЛЕНИЕ) ===== */
 .content {
   flex: 1;
-  padding: 60px 40px;
+  padding: 40px 60px;
   box-sizing: border-box;
 
   display: flex;
   justify-content: center;
 }
 
-/* ВНУТРЕННИЙ КОНТЕЙНЕР */
-.content > * {
-  max-width: 800px;
+/* контейнер текста */
+#content > * {
+  max-width: 900px;
   width: 100%;
 }
 
@@ -171,4 +171,7 @@ body {
   border: none;
   border-top: 1px solid #444;
   margin: 20px 0;
+}
+.nav-section h2 {
+  color: #aaa;
 }
