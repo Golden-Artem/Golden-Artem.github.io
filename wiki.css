@@ -195,3 +195,30 @@ body {
   border-bottom: 1px solid #333;
   padding-bottom: 5px;
 }
+/* === АНТИ-КОЛОНКИ (ФИНАЛЬНЫЙ ФИКС) === */
+
+#content {
+  display: block !important;
+  column-count: unset !important;
+  columns: unset !important;
+  column-gap: 0 !important;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* всё внутри — тоже без колонок */
+#content * {
+  column-count: unset !important;
+  columns: unset !important;
+  column-gap: 0 !important;
+  display: block;
+}
+
+/* чтобы текст шёл строго вниз */
+#content p,
+#content li,
+#content h1,
+#content h2,
+#content h3 {
+  width: 100%;
+}
