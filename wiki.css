@@ -1,58 +1,136 @@
+/* ===== БАЗА ===== */
 body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: #1a1c1f;
+  color: #e6e6e6;
+  display: flex;
+}
+
+/* ===== SIDEBAR ===== */
 .sidebar {
   width: 260px;
-  background: #111315;
+  background: #0f1114;
   height: 100vh;
   padding: 20px;
   border-right: 1px solid #2a2d31;
-  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .sidebar h1 {
-  color: #d4af37;
   font-family: 'Merriweather', serif;
+  color: #d4af37;
+  font-size: 20px;
+  margin-bottom: 15px;
 }
 
+/* ===== ПОИСК ===== */
 #search {
   width: 100%;
-  padding: 8px;
-  margin-bottom: 15px;
-  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 8px;
   border: none;
-  background: #2a2d31;
-  color: white;
+  background: #1f2227;
+  color: #fff;
+  outline: none;
 }
 
+/* ===== КАТЕГОРИИ ===== */
+.nav-section {
+  margin-bottom: 20px;
+}
+
+.nav-section h2 {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* ===== ПУНКТЫ ===== */
 .nav-item {
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
   cursor: pointer;
   transition: 0.2s;
+  color: #ccc;
 }
 
 .nav-item:hover {
-  background: #2a2d31;
+  background: #1f2227;
   transform: translateX(4px);
 }
 
 .nav-item.active {
-  background: #3a3f45;
+  background: #2a2d31;
+  color: #fff;
 }
 
+/* ===== КОНТЕНТ (ГЛАВНОЕ ИСПРАВЛЕНИЕ) ===== */
 .content {
   flex: 1;
-  padding: 40px;
-  max-width: 900px;
-  margin: auto;
-  animation: fadeIn 0.3s ease;
+  padding: 60px 40px;
+  box-sizing: border-box;
+
+  display: flex;
+  justify-content: center;
+}
+
+/* ВНУТРЕННИЙ КОНТЕЙНЕР */
+.content > * {
+  max-width: 800px;
+  width: 100%;
+}
+
+/* ===== ТЕКСТ ===== */
+.content h1 {
+  font-family: 'Merriweather', serif;
+  color: #d4af37;
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.content h2 {
+  margin-top: 30px;
+  color: #c9a94f;
+}
+
+.content p {
+  line-height: 1.7;
+  color: #ddd;
+}
+
+.content ul {
+  padding-left: 20px;
+}
+
+.content li {
+  margin-bottom: 6px;
+}
+
+/* ===== АНИМАЦИЯ ===== */
+.content {
+  animation: fadeIn 0.25s ease;
 }
 
 @keyframes fadeIn {
-  from {opacity:0; transform: translateY(10px);} 
-  to {opacity:1; transform: translateY(0);} 
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.content h1 {
-  color: #d4af37;
-  font-family: 'Merriweather', serif;
+/* ===== СКРОЛЛ ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
 }
