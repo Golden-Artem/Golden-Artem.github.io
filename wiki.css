@@ -175,3 +175,23 @@ body {
 .nav-section h2 {
   color: #aaa;
 }
+/* Цитата */
+#content blockquote {
+  border-left: 4px solid #d4af37;
+  padding-left: 10px;
+  color: #bbb;
+  margin: 15px 0;
+}
+
+/* Разделители */
+#content hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 25px 0;
+}
+
+/* Заголовки секций */
+#content h2 {
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
