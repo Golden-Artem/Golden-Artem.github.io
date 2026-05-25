@@ -226,3 +226,11 @@ body {
 #content h3 {
   width: 100%;
 }
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
