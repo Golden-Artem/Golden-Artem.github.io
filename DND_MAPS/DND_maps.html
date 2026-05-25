@@ -119,20 +119,61 @@
 <script>
 /* ---------- Ассеты ---------- */
 const assets = [
-  {name:'Деревянный дом', url:'assets/wood_house.png'},
-  {name:'Каменный дом',   url:'assets/stone_house.png'},
-  {name:'Замок',          url:'assets/castle.png'},
-  {name:'Таверна',        url:'assets/tavern.png'},
-  {name:'Гильдия',        url:'assets/guild.png'},
-  {name:'Лес',            url:'assets/forest.png'},
-  {name:'Поляна',         url:'assets/clearing.png'},
-  {name:'Вход в подземелье', url:'assets/dungeon_entrance.png'},
-  {name:'Комната подземелья', url:'assets/dungeon_room.png'},
-  {name:'Сундук',            url:'assets/dungeon_chest.png'},
-  {name:'Факел',             url:'assets/dungeon_torch.png'},
-  {name:'Руины',             url:'assets/dungeon_rocks.png'},
-  {name:'Каменная тропинка',  url:'assets/stone_path.png'},
-  {name:'Земляная тропинка',  url:'assets/earth_path.png'}
+  // ДОМА
+  {
+    name:'Деревянный дом',
+    url:'assets/wood_house.png',
+    category:'Дома',
+    scale:0.5
+  },
+  {
+    name:'Каменный дом',
+    url:'assets/stone_house.png',
+    category:'Дома',
+    scale:0.5
+  },
+
+  // ПРИРОДА
+  {
+    name:'Лес',
+    url:'assets/forest.png',
+    category:'Природа',
+    scale:0.7
+  },
+  {
+    name:'Поляна',
+    url:'assets/clearing.png',
+    category:'Природа',
+    scale:0.7
+  },
+
+  // ПОДЗЕМЕЛЬЕ
+  {
+    name:'Комната подземелья',
+    url:'assets/dungeon_room.png',
+    category:'Подземелье',
+    scale:0.8
+  },
+  {
+    name:'Сундук',
+    url:'assets/dungeon_chest.png',
+    category:'Подземелье',
+    scale:0.25
+  },
+
+  // ТРОПИНКИ
+  {
+    name:'Каменная тропинка',
+    url:'assets/stone_path.png',
+    category:'Тропинки',
+    scale:0.18
+  },
+  {
+    name:'Земляная тропинка',
+    url:'assets/earth_path.png',
+    category:'Тропинки',
+    scale:0.18
+  }
 ];
 
 /* ---------- Stage и слои ---------- */
@@ -166,12 +207,35 @@ drawGrid();
 
 /* UI ассетов */
 const assetList = document.getElementById('assetList');
-assets.forEach(a=>{
-  const d = document.createElement('div');
-  d.className = 'asset';
-  d.innerHTML = `<strong>${a.name}</strong><img class="thumb" src="${a.url}" alt="${a.name}">`;
-  d.onclick = ()=> addAsset(a.url, a.name);
-  assetList.appendChild(d);
+const grouped = {};
+
+assets.forEach(asset => {
+  if(!grouped[asset.category]){
+    grouped[asset.category] = [];
+  }
+  grouped[asset.category].push(asset);
+});
+
+Object.keys(grouped).forEach(category => {
+
+  const title = document.createElement('h3');
+  title.textContent = category;
+  assetList.appendChild(title);
+
+  grouped[category].forEach(a => {
+
+    const d = document.createElement('div');
+    d.className = 'asset';
+
+    d.innerHTML = `
+      <img class="thumb" src="${a.url}" alt="${a.name}">
+      <div>${a.name}</div>
+    `;
+
+    d.onclick = () => addAsset(a);
+
+    assetList.appendChild(d);
+  });
 });
 
 /* ---------- Объекты (слой объектов) ---------- */
@@ -186,15 +250,17 @@ const transformer = new Konva.Transformer({
 });
 objectLayer.add(transformer);
 
-function addAsset(url,name,x=null,y=null,extra={}){
+function addAsset(asset,x=null,y=null,extra={}){
   Konva.Image.fromURL(url, img=>{
-    const w = img.width() || 64, h = img.height() || 64;
+    const w = img.width() || 64;
+    const h = img.height() || 64;
+    const scale = asset.scale || 0.5;
     const id = 'obj_' + Date.now() + '_' + (idCounter++);
     img.setAttrs({
       x: x ?? stage.width()/2 - w/4,
       y: y ?? stage.height()/2 - h/4,
-      width: extra.width ?? Math.round(w/2),
-      height: extra.height ?? Math.round(h/2),
+      width: extra.width ?? Math.round(w * scale),
+      height: extra.height ?? Math.round(h * scale),
       draggable: true,
       id,
       ...extra
@@ -202,7 +268,12 @@ function addAsset(url,name,x=null,y=null,extra={}){
     img.on('click', e => { e.cancelBubble = true; toggleSelect(id); });
     img.on('dragend transformend', refreshObjectList);
     objectLayer.add(img);
-    objectsData.push({id, name, url, node: img});
+    objectsData.push({
+      id,
+      name: asset.name,
+      url: asset.url,
+      node: img
+    });
     selectObject(id);
     refreshObjectList();
   });
