@@ -1,0 +1,224 @@
+/* ===== БАЗА ===== */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: #1a1c1f;
+  color: #e6e6e6;
+  display: flex;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 260px;
+  background: #0f1114;
+  height: 100vh;
+  padding: 20px;
+  border-right: 1px solid #2a2d31;
+  box-sizing: border-box;
+}
+
+.sidebar h1 {
+  font-family: 'Merriweather', serif;
+  color: #d4af37;
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+/* ===== ПОИСК ===== */
+#search {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: none;
+  background: #1f2227;
+  color: #fff;
+  outline: none;
+}
+
+/* ===== КАТЕГОРИИ ===== */
+.nav-section {
+  margin-bottom: 20px;
+}
+
+.nav-section h2 {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* ===== ПУНКТЫ ===== */
+.nav-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  color: #ccc;
+}
+
+.nav-item:hover {
+  background: #1f2227;
+  transform: translateX(4px);
+}
+
+.nav-item.active {
+  background: #2a2d31;
+  color: #fff;
+}
+
+/* ===== КОНТЕНТ (ГЛАВНОЕ ИСПРАВЛЕНИЕ) ===== */
+.content {
+  flex: 1;
+  padding: 40px 60px;
+  box-sizing: border-box;
+
+  display: flex;
+  justify-content: center;
+}
+
+/* контейнер текста */
+#content > * {
+  max-width: 900px;
+  width: 100%;
+}
+
+/* ===== ТЕКСТ ===== */
+.content h1 {
+  font-family: 'Merriweather', serif;
+  color: #d4af37;
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.content h2 {
+  margin-top: 30px;
+  color: #c9a94f;
+}
+
+.content p {
+  line-height: 1.7;
+  color: #ddd;
+}
+
+.content ul {
+  padding-left: 20px;
+}
+
+.content li {
+  margin-bottom: 6px;
+}
+
+/* ===== АНИМАЦИЯ ===== */
+.content {
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== СКРОЛЛ ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+/* ===== ФИКС MARKDOWN (ОЧЕНЬ ВАЖНО) ===== */
+
+#content {
+  color: #e6e6e6;
+}
+
+#content * {
+  color: inherit;
+}
+
+/* заголовки */
+#content h1, 
+#content h2, 
+#content h3 {
+  color: #d4af37;
+}
+
+/* текст */
+#content p {
+  color: #ddd;
+}
+
+/* списки */
+#content li {
+  color: #ccc;
+}
+
+/* жирный текст */
+#content strong {
+  color: #fff;
+}
+
+/* линии */
+#content hr {
+  border: none;
+  border-top: 1px solid #444;
+  margin: 20px 0;
+}
+.nav-section h2 {
+  color: #aaa;
+}
+/* Цитата */
+#content blockquote {
+  border-left: 4px solid #d4af37;
+  padding-left: 10px;
+  color: #bbb;
+  margin: 15px 0;
+}
+
+/* Разделители */
+#content hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 25px 0;
+}
+
+/* Заголовки секций */
+#content h2 {
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+/* === АНТИ-КОЛОНКИ (ФИНАЛЬНЫЙ ФИКС) === */
+
+#content {
+  display: block !important;
+  column-count: unset !important;
+  columns: unset !important;
+  column-gap: 0 !important;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* всё внутри — тоже без колонок */
+#content * {
+  column-count: unset !important;
+  columns: unset !important;
+  column-gap: 0 !important;
+  display: block;
+}
+
+/* чтобы текст шёл строго вниз */
+#content p,
+#content li,
+#content h1,
+#content h2,
+#content h3 {
+  width: 100%;
+}
