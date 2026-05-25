@@ -1,0 +1,725 @@
+{
+  "fighter": [
+    {
+      "id": "champion",
+      "name": "Чемпион",
+      "desc": ""
+    },
+    {
+      "id": "battle_master",
+      "name": "Мастер боевых искусств",
+      "desc": ""
+    },
+    {
+      "id": "mystic_knight",
+      "name": "Мистический рыцарь",
+      "desc": ""
+    },
+    {
+      "id": "purple_dragon_knight",
+      "name": "Рыцарь Пурпурного дракона",
+      "desc": ""
+    },
+    {
+      "id": "cavalryman",
+      "name": "Кавалерист",
+      "desc": ""
+    },
+    {
+      "id": "mystical_archer",
+      "name": "Мистический лучник",
+      "desc": ""
+    },
+    {
+      "id": "samurai",
+      "name": "Самурай",
+      "desc": ""
+    },
+    {
+      "id": "knight_of_echo",
+      "name": "Рыцарь Эха",
+      "desc": ""
+    },
+    {
+      "id": "psi_warrior",
+      "name": "Пси-воин",
+      "desc": ""
+    },
+    {
+      "id": "rune_knight",
+      "name": "Рунный рыцарь",
+      "desc": ""
+    }
+  ],
+  "wizard": [
+    {
+      "id": "school_of_evocation",
+      "name": "Школа Воплощения",
+      "desc": ""
+    },
+    {
+      "id": "school_of_conjuration",
+      "name": "Школа Вызова",
+      "desc": ""
+    },
+    {
+      "id": "school_of_illusion",
+      "name": "Школа Иллюзии",
+      "desc": ""
+    },
+    {
+      "id": "school_of_necromancy",
+      "name": "Школа Некромантии",
+      "desc": ""
+    },
+    {
+      "id": "school_of_abjuration",
+      "name": "Школа Ограждения",
+      "desc": ""
+    },
+    {
+      "id": "school_of_enchantment",
+      "name": "Школа Очарования",
+      "desc": ""
+    },
+    {
+      "id": "school_of_transmutation",
+      "name": "Школа Преобразования",
+      "desc": ""
+    },
+    {
+      "id": "school_of_divination",
+      "name": "Школа Прорицания",
+      "desc": ""
+    },
+    {
+      "id": "war_magic",
+      "name": "Военная магия",
+      "desc": ""
+    },
+    {
+      "id": "chronurgy_magic",
+      "name": "Магия Хронургии",
+      "desc": ""
+    },
+    {
+      "id": "graviturgy_magic",
+      "name": "Магия Гравитургии",
+      "desc": ""
+    },
+    {
+      "id": "order_of_scribes",
+      "name": "Орден писцов",
+      "desc": ""
+    },
+    {
+      "id": "bladesong",
+      "name": "Песнь клинка",
+      "desc": ""
+    }
+  ],
+  "bard": [
+    {
+      "id": "college_of_valor",
+      "name": "Коллегия Доблести",
+      "desc": ""
+    },
+    {
+      "id": "college_of_knowledge",
+      "name": "Коллегия Знаний",
+      "desc": ""
+    },
+    {
+      "id": "college_of_swords",
+      "name": "Коллегия Мечей",
+      "desc": ""
+    },
+    {
+      "id": "college_of_charm",
+      "name": "Коллегия Очарования",
+      "desc": ""
+    },
+    {
+      "id": "college_of_whispers",
+      "name": "Коллегия Шёпотов",
+      "desc": ""
+    },
+    {
+      "id": "college_of_eloquence",
+      "name": "Коллегия Красноречия",
+      "desc": ""
+    },
+    {
+      "id": "college_of_creation",
+      "name": "Коллегия Созидания",
+      "desc": ""
+    },
+    {
+      "id": "college_of_spirits",
+      "name": "Коллегия Духов",
+      "desc": ""
+    }
+  ],
+  "barbarian": [
+    {
+      "id": "Way_of_the_Berserker",
+      "name": "Путь берсерка",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_the_Totem_Warrior",
+      "name": "Путь тотемного воина",
+      "desc": "ы"
+    },
+    {
+      "id": "Path_of_the_Raging_in_Battle",
+      "name": "Путь бушующего в бою",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_the_Petrel",
+      "name": "Путь буревестника",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_the_Guardian_Ancestor",
+      "name": "Путь предка-хранителя",
+      "desc": ""
+    },
+    {
+      "id": "Fanatic's_Path",
+      "name": "Путь фанатика",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_Wild_Magic",
+      "name": "Путь дикой магии",
+      "desc": ""
+    },
+    {
+      "id": "Way_of_the_Beast",
+      "name": "Путь зверя",
+      "desc": ""
+    },
+    {
+      "id": "Way_of_the_Giant",
+      "name": "Путь великана",
+      "desc": ""
+    }
+  ],
+    "druid": [
+    {
+      "id": "Circle_of_the_Earth",
+      "name": "Круг земли",
+      "desc": ""
+    },
+    {
+      "id": "Circle_of_the_Moon",
+      "name": "Круг луны",
+      "desc": ""
+    },
+    {
+      "id": "Shepherd's_Circle",
+      "name": "Круг пастыря",
+      "desc": ""
+    },
+    {
+      "id": "Circle_of_Dreams",
+      "name": "Круг снов",
+      "desc": ""
+    },
+    {
+      "id": "Wildfire_Circle",
+      "name": "Круг дикого огня",
+      "desc": ""
+    },
+    {
+      "id": "Circle_of_stars",
+      "name": "Круг звёзд",
+      "desc": ""
+    },
+    {
+      "id": "Circle_of_disputes",
+      "name": "Круг спор",
+      "desc": ""
+    }
+  ],
+      "cleric": [
+    {
+      "id": "Storm_Domain",
+      "name": "Домен бури",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_War",
+      "name": "Домен войны",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Life",
+      "name": "Домен жизни",
+      "desc": ""
+    },
+    {
+      "id": "Knowledge_Domain",
+      "name": "Домен знаний",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Deception",
+      "name": "Домен обмана",
+      "desc": ""
+    },
+    {
+      "id": "Nature_Domain",
+      "name": "Домен природы",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Light",
+      "name": "Домен света",
+      "desc": ""
+    },
+    {
+      "id": "Death_Domain",
+      "name": "Домен смерти",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Magic",
+      "name": "Домен магии",
+      "desc": ""
+    },
+    {
+      "id": "Forge_Domain",
+      "name": "Домен кузни",
+      "desc": ""
+    },
+    {
+      "id": "Domain_of_Rest",
+      "name": "Домен упокоения",
+      "desc": ""
+    },
+    {
+      "id": "Peace_Domain",
+      "name": "Домен мира",
+      "desc": ""
+    },
+    {
+      "id": "Order_domain",
+      "name": "Домен порядка",
+      "desc": ""
+    },
+    {
+      "id": "Twilight_Domain",
+      "name": "Домен сумерек",
+      "desc": ""
+    }
+  ],
+      "artificer": [
+    {
+      "id": "alhimik",
+      "name": "Алхимик",
+      "desc": ""
+    },
+    {
+      "id": "Artilleryman",
+      "name": "Артиллерист",
+      "desc": ""
+    },
+    {
+      "id": "Atomancer",
+      "name": "Атомщик",
+      "desc": ""
+    },
+    {
+      "id": "Battle_Blacksmith",
+      "name": "Боевой кузнец",
+      "desc": ""
+    },
+    {
+      "id": "Bronnik",
+      "name": "Бронник",
+      "desc": ""
+    }
+  ],
+      "warlock": [
+    {
+      "id": "Archfey",
+      "name": "Архифея",
+      "desc": ""
+    },
+    {
+      "id": "Eshadie",
+      "name": "Исчадие",
+      "desc": ""
+    },
+    {
+      "id": "Great_Ancient_One",
+      "name": "Великий Древний",
+      "desc": ""
+    },
+      {
+      "id": "Immortal",
+      "name": "Бессмертный",
+      "desc": ""
+    },
+      {
+      "id": "Witchblade",
+      "name": "Ведьмовской клинок",
+      "desc": ""
+    },
+      {
+      "id": "Celestial",
+      "name": "Небожитель",
+      "desc": ""
+    },
+      {
+      "id": "Bottomless",
+      "name": "Бездонный",
+      "desc": ""
+    },
+      {
+      "id": "Genius",
+      "name": "Гений",
+      "desc": ""
+    },
+    {
+      "id": "Undead",
+      "name": "Нежить",
+      "desc": ""
+    }
+  ],
+      "monk": [
+    {
+      "id": "Path_of_the_Open_Palm",
+      "name": "Путь открытой ладони",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_the_Shadow",
+      "name": "Путь тени",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_the_Four_Elements",
+      "name": "Путь четырёх стихий",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_Long_Death",
+      "name": "Путь долгой смерти",
+      "desc": ""
+    },
+    {
+      "id": "Way_of_the_Kensei",
+      "name": "Путь кэнсэя",
+      "desc": ""
+    },
+    {
+      "id": "Way_of_the_Drunken_Master",
+      "name": "Путь пьяного мастера",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_the_Solar_Soul",
+      "name": "Путь солнечной души",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_the_astral_body",
+      "name": "Путь астрального тела",
+      "desc": ""
+    },
+    {
+      "id": "Way_of_Mercy",
+      "name": "Путь милосердия",
+      "desc": ""
+    },
+    {
+      "id": "Path_of_the_Ascending_Dragon",
+      "name": "Путь восходящего дракона",
+      "desc": ""
+    }
+  ],
+        "paladin": [
+    {
+      "id": "Oath_of_Allegiance",
+      "name": "Клятва преданности",
+      "desc": ""
+    },
+    {
+      "id": "Oath_of_the_Ancients",
+      "name": "Клятва древних",
+      "desc": ""
+    },
+    {
+      "id": "Oath_of_Vengeance",
+      "name": "Клятва мести",
+      "desc": ""
+    },
+    {
+      "id": "Oathbreaker",
+      "name": "Клятвопреступник",
+      "desc": ""
+    },
+    {
+      "id": "Oath_of_the_Crown",
+      "name": "Клятва короны",
+      "desc": ""
+    },
+    {
+      "id": "Oath_of_Atonement",
+      "name": "Клятва искупления",
+      "desc": ""
+    },
+    {
+      "id": "Oath_of_Conquest",
+      "name": "Клятва покорения",
+      "desc": ""
+    },
+    {
+      "id": "Oath_of_Glory",
+      "name": "Клятва славы",
+      "desc": ""
+    },
+    {
+      "id": "Oath_of_the_Guardians",
+      "name": "Клятва смотрителей",
+      "desc": ""
+    }
+  ],
+        "ranger": [
+    {
+      "id": "Hunter",
+      "name": "Охотник",
+      "desc": ""
+    },
+    {
+      "id": "Beastmaster",
+      "name": "Повелитель зверей",
+      "desc": ""
+    },
+    {
+      "id": "Horizon_Wanderer",
+      "name": "Странник горизонта",
+      "desc": ""
+    },
+    {
+      "id": "Shadow_Hunter",
+      "name": "Сумрачный охотник",
+      "desc": ""
+    },
+    {
+      "id": "Monster_Slayer",
+      "name": "Убийца чудовищ",
+      "desc": ""
+    },
+    {
+      "id": "Fairy_Wanderer",
+      "name": "Странник фей",
+      "desc": ""
+    },
+    {
+      "id": "Keeper_of_the_Swarm",
+      "name": "Хранитель роя",
+      "desc": ""
+    },
+    {
+      "id": "Drake_Rider",
+      "name": "Наездник на дрейке",
+      "desc": ""
+    }
+  ],
+  
+        "sorcerer": [
+    {
+      "id": "Legacy_of_Dragon_Blood",
+      "name": "Наследие драконьей крови",
+      "desc": ""
+    },
+    {
+      "id": "Wild_Magic",
+      "name": "Дикая магия",
+      "desc": ""
+    },
+    {
+      "id": "Divine_soul",
+      "name": "Божественная душа",
+      "desc": ""
+    },
+    {
+      "id": "Shadow_magic",
+      "name": "Теневая магия",
+      "desc": ""
+    },
+    {
+      "id": "Storm_Witchcraft",
+      "name": "Штормовое колдовство",
+      "desc": ""
+    },
+    {
+      "id": "Aberrant_mind",
+      "name": "Аберрантный разум",
+      "desc": ""
+    },
+    {
+      "id": "Clockwork_soul",
+      "name": "Заводная душа",
+      "desc": ""
+    },
+    {
+      "id": "Lunar_Witchcraft",
+      "name": "Лунное чародейство",
+      "desc": ""
+    }
+  ],
+        "alchemist": [
+    {
+      "id": "Amorist",
+      "name": "Аморист",
+      "desc": ""
+    },
+    {
+      "id": "Apothecary",
+      "name": "Апотекарий",
+      "desc": ""
+    },
+    {
+      "id": "Mad_Bomber",
+      "name": "Безумный бомбометатель",
+      "desc": ""
+    },
+    {
+      "id": "Dynamo_engineer",
+      "name": "Динамо-инженер",
+      "desc": ""
+    },
+    {
+      "id": "Researcher",
+      "name": "Исследователь",
+      "desc": ""
+    },
+    {
+      "id": "Xenochemist",
+      "name": "Ксенохимик",
+      "desc": ""
+    },
+    {
+      "id": "Master_of_Poisons",
+      "name": "Мастер ядов",
+      "desc": ""
+    },
+    {
+      "id": "Mixologist",
+      "name": "Миксолог",
+      "desc": ""
+    },
+    {
+      "id": "Mutageneticist",
+      "name": "Мутагенетик",
+      "desc": ""
+    },
+    {
+      "id": "Slime_Spreader",
+      "name": "Разводчик слизи",
+      "desc": ""
+    },
+    {
+      "id": "Shooter",
+      "name": "Стрелок",
+      "desc": ""
+    }
+  ],
+        "stargazer": [
+    {
+      "id": "Water_trine",
+      "name": "Трин воды",
+      "desc": ""
+    },
+    {
+      "id": "Air_trine",
+      "name": "Трин воздуха",
+      "desc": ""
+    },
+    {
+      "id": "Earth_Trine",
+      "name": "Трин земли",
+      "desc": ""
+    },
+    {
+      "id": "Trine_of_Fire",
+      "name": "Трин огня",
+      "desc": ""
+    }
+  ],
+        "bloodhunter": [
+    {
+      "id": "Order_of_Phantom_Assassins",
+      "name": "Орден призрачных убийц",
+      "desc": ""
+    },
+    {
+      "id": "Order_of_Fel_Souls",
+      "name": "Орден осквернённых душ",
+      "desc": ""
+    },
+    {
+      "id": "Order_of_Mutants",
+      "name": "Орден мутантов",
+      "desc": ""
+    },
+    {
+      "id": "Order_of_Lycanthropes",
+      "name": "Орден ликантропов",
+      "desc": ""
+    }
+  ],
+  "rogue": [
+    {
+      "id": "thief",
+      "name": "Вор",
+      "desc": ""
+    },
+    {
+      "id": "Mystical_Trickster",
+      "name": "Мистический ловкач",
+      "desc": ""
+    },
+    {
+      "id": "Duelist",
+      "name": "Дуэлянт",
+      "desc": ""
+    },
+    {
+      "id": "Combinator",
+      "name": "Комбинатор",
+      "desc": ""
+    },
+    {
+      "id": "Scout",
+      "name": "Скаут",
+      "desc": ""
+    },
+    {
+      "id": "Detective",
+      "name": "Сыщик",
+      "desc": ""
+    },
+    {
+      "id": "Phantom",
+      "name": "Фантом",
+      "desc": ""
+    },
+    {
+      "id": "Soul_Blade",
+      "name": "Клинок души",
+      "desc": ""
+    },
+    {
+      "id": "murderer",
+      "name": "Убийца",
+      "desc": ""
+    }
+  ]
+}
