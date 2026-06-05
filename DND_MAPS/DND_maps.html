@@ -209,6 +209,7 @@ drawGrid();
 const assetList = document.getElementById('assetList');
 const grouped = {};
 const userAssets = [];
+const collapsedCategories = {};  
   
 assets.forEach(asset => {
   if(!grouped[asset.category]){
@@ -216,6 +217,7 @@ assets.forEach(asset => {
   }
   grouped[asset.category].push(asset);
 });
+  
 function rebuildAssetPanel(){
   assetList.innerHTML = '';
 
@@ -228,9 +230,22 @@ function rebuildAssetPanel(){
   Object.keys(allGroups).forEach(category => {
 
     const title = document.createElement('h3');
-    title.textContent = category;
-
+    
+    const isCollapsed = collapsedCategories[category];
+    
+    title.textContent =
+      (isCollapsed ? '▶ ' : '▼ ') + category;
+    
+    title.style.cursor = 'pointer';
+    
+    title.onclick = () => {
+      collapsedCategories[category] = !collapsedCategories[category];
+      rebuildAssetPanel();
+    };
+    
     assetList.appendChild(title);
+    
+    if(isCollapsed) return;
 
     allGroups[category].forEach(a => {
 
