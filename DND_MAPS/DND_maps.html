@@ -631,11 +631,23 @@ document.getElementById('loadJson').onchange = e=>{
       objectsData = [];
       deselect();
       (data.objects||[]).sort((a,b)=>a.zIndex-b.zIndex).forEach(o=>{
-        addAsset(o.url, o.name, o.x, o.y, {
-          width: o.width, height: o.height, scaleX: o.scaleX, scaleY: o.scaleY, rotation: o.rotation
-        });
+        addAsset(
+          {
+            name: o.name,
+            url: o.url,
+            scale: 1
+          },
+          o.x,
+          o.y,
+          {
+            width: o.width,
+            height: o.height,
+            scaleX: o.scaleX,
+            scaleY: o.scaleY,
+            rotation: o.rotation
+          }
+        );
       });
-      // restore stage transform
       if(data.stage){
         stage.position({x: data.stage.x||0, y: data.stage.y||0});
         const s = data.stage.scale || 1; stage.scale({x:s,y:s});
