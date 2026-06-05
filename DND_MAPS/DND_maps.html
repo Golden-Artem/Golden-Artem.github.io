@@ -208,35 +208,48 @@ drawGrid();
 /* UI ассетов */
 const assetList = document.getElementById('assetList');
 const grouped = {};
-
+const userAssets = [];
+  
 assets.forEach(asset => {
   if(!grouped[asset.category]){
     grouped[asset.category] = [];
   }
   grouped[asset.category].push(asset);
 });
+function rebuildAssetPanel(){
+  assetList.innerHTML = '';
 
-Object.keys(grouped).forEach(category => {
+  const allGroups = {...grouped};
 
-  const title = document.createElement('h3');
-  title.textContent = category;
-  assetList.appendChild(title);
+  if(userAssets.length){
+    allGroups['Пользовательские'] = userAssets;
+  }
 
-  grouped[category].forEach(a => {
+  Object.keys(allGroups).forEach(category => {
 
-    const d = document.createElement('div');
-    d.className = 'asset';
+    const title = document.createElement('h3');
+    title.textContent = category;
 
-    d.innerHTML = `
-      <img class="thumb" src="${a.url}" alt="${a.name}">
-      <div>${a.name}</div>
-    `;
+    assetList.appendChild(title);
 
-    d.onclick = () => addAsset(a);
+    allGroups[category].forEach(a => {
 
-    assetList.appendChild(d);
+      const d = document.createElement('div');
+      d.className = 'asset';
+
+      d.innerHTML = `
+        <img class="thumb" src="${a.url}" alt="${a.name}">
+        <div>${a.name}</div>
+      `;
+
+      d.onclick = () => addAsset(a);
+
+      assetList.appendChild(d);
+    });
   });
-});
+}
+  
+rebuildAssetPanel();
 
 /* ---------- Объекты (слой объектов) ---------- */
 let objectsData = []; // {id,name,url,node}
@@ -251,7 +264,7 @@ const transformer = new Konva.Transformer({
 objectLayer.add(transformer);
 
 function addAsset(asset,x=null,y=null,extra={}){
-  Konva.Image.fromURL(url, img=>{
+  Konva.Image.fromURL(asset.url, img=>{
     const w = img.width() || 64;
     const h = img.height() || 64;
     const scale = asset.scale || 0.5;
@@ -356,7 +369,12 @@ cont.addEventListener('mouseleave', ()=>{ isPanning=false; cont.style.cursor='gr
 document.getElementById('fileInput').onchange = e=>{
   const f = e.target.files[0]; if(!f) return;
   const r = new FileReader();
-  r.onload = ev => addAsset(ev.target.result, f.name);
+  r.onload = ev => addAsset({
+    name: f.name,
+    url: ev.target.result,
+    category: 'Пользовательские',
+    scale: 0.5
+  });
   r.readAsDataURL(f);
   e.target.value = '';
 };
