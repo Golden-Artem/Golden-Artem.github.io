@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.7.6</title>
+<title>D&D Map Maker — 0.7.7</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
   :root { --left:200px; --right:320px; }
@@ -102,6 +102,7 @@
     <button id="savePngBtn">Сохранить карту (PNG)</button>
     <button id="saveJsonBtn">Сохранить проект (JSON)</button>
     <input id="loadJson" type="file" accept="application/json">
+    <button id="resetMapBtn">Сбросить карту</button>
   </div>
 
   <!-- Центральное поле -->
@@ -556,7 +557,41 @@ document.getElementById('fileInput').onchange = e=>{
   r.readAsDataURL(f);
   e.target.value = '';
 };
+document.getElementById('resetMapBtn').onclick = ()=>{
 
+  if(!confirm('Очистить всю карту?')){
+    return;
+  }
+
+  // удалить объекты
+  objectsData.forEach(o => o.node.destroy());
+  objectsData = [];
+
+  // удалить токены
+  characters.forEach(ch=>{
+    if(ch._group){
+      ch._group.destroy();
+    }
+  });
+  characters = [];
+
+  // удалить фон
+  backgroundLayer.destroyChildren();
+
+  // снять выделение
+  selectedId = null;
+  selectedCharacterIndex = null;
+
+  transformer.nodes([]);
+
+  refreshObjectList();
+  refreshCharacters();
+
+  backgroundLayer.draw();
+  objectLayer.draw();
+  tokenLayer.draw();
+
+};
 /* Сохранение PNG */
 document.getElementById('savePngBtn').onclick = ()=>{
   const uri = stage.toDataURL({ pixelRatio:2 });
