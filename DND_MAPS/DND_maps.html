@@ -111,6 +111,14 @@
   <div class="panel right">
     <h3>Объекты</h3>
     <div id="objects"></div>
+    <h3>Свойства</h3>
+    <div id="objectProps">
+    <input id="objName" placeholder="Название">
+    <input id="objX" type="number" placeholder="X">
+    <input id="objY" type="number" placeholder="Y">
+    <input id="objWidth" type="number" placeholder="Ширина">
+    <input id="objHeight" type="number" placeholder="Высота">
+    </div>
     <button id="deleteBtn">Удалить выбранный</button>
     <button id="copyBtn">Копировать выбранный</button>
     <button id="mirrorBtn">Отзеркалить по горизонтали</button>
@@ -206,7 +214,11 @@ const assets = [
     scale:0.18
   }
 ];
-
+const objName = document.getElementById('objName');
+const objX = document.getElementById('objX');
+const objY = document.getElementById('objY');
+const objWidth = document.getElementById('objWidth');
+const objHeight = document.getElementById('objHeight');
 /* ---------- Stage и слои ---------- */
 const stage = new Konva.Stage({
   container: 'container',
@@ -303,6 +315,56 @@ function rebuildAssetPanel(){
   
 rebuildAssetPanel();
 
+objName.oninput = ()=>{
+
+  const obj = objectsData.find(o=>o.id===selectedId);
+
+  if(!obj) return;
+
+  obj.name = objName.value;
+
+  refreshObjectList();
+};
+objX.onchange = ()=>{
+  const obj = objectsData.find(o=>o.id===selectedId);
+
+  if(!obj) return;
+
+  obj.node.x(Number(objX.value));
+
+  objectLayer.draw();
+};
+
+objY.onchange = ()=>{
+  const obj = objectsData.find(o=>o.id===selectedId);
+
+  if(!obj) return;
+
+  obj.node.y(Number(objY.value));
+
+  objectLayer.draw();
+};
+objWidth.onchange = ()=>{
+
+  const obj = objectsData.find(o=>o.id===selectedId);
+
+  if(!obj) return;
+
+  obj.node.width(Number(objWidth.value));
+
+  objectLayer.draw();
+};
+
+objHeight.onchange = ()=>{
+
+  const obj = objectsData.find(o=>o.id===selectedId);
+
+  if(!obj) return;
+
+  obj.node.height(Number(objHeight.value));
+
+  objectLayer.draw();
+};
 /* ---------- Объекты (слой объектов) ---------- */
 let objectsData = []; // {id,name,url,node}
 let selectedId = null;
@@ -381,9 +443,10 @@ function selectObject(id){
 
   objectLayer.batchDraw();
   refreshObjectList();
+  updateObjectProperties();
 }
 function toggleSelect(id){ selectedId === id ? deselect() : selectObject(id); }
-function deselect(){ selectedId = null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList(); }
+function deselect(){ selectedId = null; transformer.nodes([]); objectLayer.batchDraw(); refreshObjectList(); updateObjectProperties(); }
 stage.on('mousedown', e => { if(e.target===stage || e.target === backgroundLayer || e.target === gridLayer) deselect(); });
 
 /* Удаление / копирование / зеркало / слои */
@@ -813,6 +876,25 @@ stage.on('mousedown', e=>{
     refreshCharacters();
   }
 });
+function updateObjectProperties(){
+  const obj = objectsData.find(o => o.id === selectedId);
+
+  if(!obj){
+    objName.value = '';
+    objX.value = '';
+    objY.value = '';
+    objWidth.value = '';
+    objHeight.value = '';
+    return;
+  }
+
+  objName.value = obj.name;
+  objX.value = Math.round(obj.node.x());
+  objY.value = Math.round(obj.node.y());
+
+  objWidth.value = Math.round(obj.node.width());
+  objHeight.value = Math.round(obj.node.height());
+}
 </script>
 </body>
 </html>
