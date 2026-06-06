@@ -920,6 +920,39 @@ function updateObjectProperties(){
   objRotation.value =
     Math.round(obj.node.rotation());
 }
+document.addEventListener('keydown', e=>{
+
+  // Delete — удалить объект
+  if(e.key === 'Delete'){
+
+    if(selectedId){
+
+      const i = objectsData.findIndex(
+        o => o.id === selectedId
+      );
+
+      if(i >= 0){
+        objectsData[i].node.destroy();
+        objectsData.splice(i,1);
+        deselect();
+        refreshObjectList();
+      }
+    }
+  }
+
+  // Esc — снять выделение
+  if(e.key === 'Escape'){
+
+    deselect();
+
+    selectedCharacterIndex = null;
+
+    updateCharacterHighlight();
+
+    refreshCharacters();
+  }
+
+});
 </script>
 </body>
 </html>
