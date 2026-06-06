@@ -247,6 +247,7 @@ assets.forEach(asset => {
     grouped[asset.category] = [];
   }
   grouped[asset.category].push(asset);
+  
 });
   
 function rebuildAssetPanel(){
@@ -332,6 +333,7 @@ function addAsset(asset,x=null,y=null,extra={}){
     img.on('click', e => { e.cancelBubble = true; toggleSelect(id); });
     img.on('dragend transformend', refreshObjectList);
     objectLayer.add(img);
+    transformer.moveToTop();
     objectsData.push({
       id,
       name: asset.name,
@@ -349,15 +351,34 @@ function refreshObjectList(){
   objectsData.forEach(o=>{
     const div = document.createElement('div');
     div.className = 'objItem' + (o.id === selectedId ? ' active' : '');
-    div.textContent = o.name;
+    const input = document.createElement('input');
+    input.value = o.name;
+    input.style.width = '100%';
+    
+    input.oninput = ()=>{
+      o.name = input.value;
+    };
+    
+    div.appendChild(input);
+    input.onclick = e=>{
+      e.stopPropagation();
+    };
     div.onclick = ()=> toggleSelect(o.id);
     objectsDiv.appendChild(div);
   });
 }
 function selectObject(id){
   selectedId = id;
+
   const entry = objectsData.find(o=>o.id === id);
-  if(entry) transformer.nodes([entry.node]);
+
+  if(entry){
+    transformer.nodes([entry.node]);
+
+    transformer.moveToTop();
+    objectLayer.moveToTop();
+  }
+
   objectLayer.batchDraw();
   refreshObjectList();
 }
@@ -367,8 +388,31 @@ stage.on('mousedown', e => { if(e.target===stage || e.target === backgroundLayer
 
 /* Удаление / копирование / зеркало / слои */
 document.getElementById('deleteBtn').onclick = ()=>{ if(!selectedId) return; const i = objectsData.findIndex(o=>o.id===selectedId); if(i>=0){ objectsData[i].node.destroy(); objectsData.splice(i,1); deselect(); refreshObjectList(); }};
-document.getElementById('copyBtn').onclick = ()=>{ if(!selectedId) return; const obj = objectsData.find(o=>o.id===selectedId); if(!obj) return; const n = obj.node; const pos = stage.getPointerPosition() || {x:n.x()+20,y:n.y()+20}; addAsset(obj.url, obj.name+' (копия)', pos.x, pos.y, { width: n.width(), height: n.height(), scaleX: n.scaleX(), scaleY: n.scaleY(), rotation: n.rotation() });};
-document.getElementById('mirrorBtn').onclick = ()=>{ if(!selectedId) return; const obj = objectsData.find(o=>o.id===selectedId); obj.node.scaleX(obj.node.scaleX() * -1); objectLayer.batchDraw(); };
+document.getElementById('copyBtn').onclick = ()=>{
+  if(!selectedId) return;
+
+  const obj = objectsData.find(o=>o.id===selectedId);
+  if(!obj) return;
+
+  const n = obj.node;
+
+  addAsset(
+    {
+      name: obj.name,
+      url: obj.url,
+      scale: 1
+    },
+    n.x()+20,
+    n.y()+20,
+    {
+      width:n.width(),
+      height:n.height(),
+      scaleX:n.scaleX(),
+      scaleY:n.scaleY(),
+      rotation:n.rotation()
+    }
+  );
+};
 document.getElementById('layerUpBtn').onclick = ()=>{ if(!selectedId) return; objectsData.find(o=>o.id===selectedId).node.moveUp(); objectLayer.batchDraw(); };
 document.getElementById('layerDownBtn').onclick = ()=>{ if(!selectedId) return; objectsData.find(o=>o.id===selectedId).node.moveDown(); objectLayer.batchDraw(); };
 
