@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>D&D Map Maker — 0.7.4</title>
+<title>D&D Map Maker — 0.7.6</title>
 <script src="https://unpkg.com/konva@9.3.1/konva.min.js"></script>
 <style>
   :root { --left:200px; --right:320px; }
@@ -118,6 +118,7 @@
     <input id="objY" type="number" placeholder="Y">
     <input id="objWidth" type="number" placeholder="Ширина">
     <input id="objHeight" type="number" placeholder="Высота">
+    <input id="objRotation" type="number" placeholder="Поворот">
     </div>
     <button id="deleteBtn">Удалить выбранный</button>
     <button id="copyBtn">Копировать выбранный</button>
@@ -219,6 +220,7 @@ const objX = document.getElementById('objX');
 const objY = document.getElementById('objY');
 const objWidth = document.getElementById('objWidth');
 const objHeight = document.getElementById('objHeight');
+const objRotation = document.getElementById('objRotation');
 /* ---------- Stage и слои ---------- */
 const stage = new Konva.Stage({
   container: 'container',
@@ -314,7 +316,7 @@ function rebuildAssetPanel(){
 }
   
 rebuildAssetPanel();
-
+//Мильён обработчиков
 objName.oninput = ()=>{
 
   const obj = objectsData.find(o=>o.id===selectedId);
@@ -362,6 +364,16 @@ objHeight.onchange = ()=>{
   if(!obj) return;
 
   obj.node.height(Number(objHeight.value));
+
+  objectLayer.draw();
+};
+objRotation.onchange = ()=>{
+
+  const obj = objectsData.find(o => o.id === selectedId);
+
+  if(!obj) return;
+
+  obj.node.rotation(Number(objRotation.value));
 
   objectLayer.draw();
 };
@@ -905,6 +917,8 @@ function updateObjectProperties(){
 
   objHeight.value =
     Math.round(obj.node.height() * obj.node.scaleY());
+  objRotation.value =
+    Math.round(obj.node.rotation());
 }
 </script>
 </body>
